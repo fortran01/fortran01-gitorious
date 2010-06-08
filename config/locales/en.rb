@@ -664,6 +664,7 @@
           :mailinglist_url => "Mailinglist URL (if any)",
           :bugtracker_url => "Bugtracker URL (if any)",
           :wiki_enabled => "Should the wiki be enabled?",
+          :visibility => "Project visibility",
           :tag_list => "Labels (space separated)",
           :merge_request_states => 'Merge request states',
         },

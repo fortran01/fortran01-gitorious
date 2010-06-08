@@ -39,6 +39,14 @@ module ProjectsHelper
     ]
   end
 
+  def visibility_choices
+    [
+      ["Visible to everyone", Project::VISIBILITY_ALL],
+      ["Visible to logged in users", Project::VISIBILITY_LOGGED_IN],
+      ["Visible to project members", Project::VISIBILITY_COLLABORATORS]
+    ]
+  end
+
   def add_status_link(form_builder)
     link_to_function("Add status") do |page|
       form_builder.fields_for(:merge_request_statuses, MergeRequestStatus.new,
