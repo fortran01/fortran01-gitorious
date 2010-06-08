@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20100316124803) do
+ActiveRecord::Schema.define(:version => 20100608093600) do
 
   create_table "archived_events", :force => true do |t|
     t.integer  "user_id"
@@ -307,6 +307,7 @@ ActiveRecord::Schema.define(:version => 20100316124803) do
     t.boolean  "merge_requests_enabled",                 :default => true
     t.integer  "disk_usage"
     t.integer  "push_count_since_gc"
+    t.boolean  "private_repo",                           :default => false
   end
 
   add_index "repositories", ["hashed_path"], :name => "index_repositories_on_hashed_path", :unique => true
