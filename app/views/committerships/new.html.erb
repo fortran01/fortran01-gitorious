@@ -1,5 +1,6 @@
 <%
 #--
+#   Copyright (C) 2010 Marko Peltola <marko@markopeltola.com>
 #   Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies)
 #
 #   This program is free software: you can redistribute it and/or modify
@@ -71,6 +72,7 @@
   </p>
 
   <p><%= f.label :permissions -%>:
+		<p><%= check_box_tag "permissions[]", "view", false -%> <%= f.label "View" %></p>
 		<p><%= check_box_tag "permissions[]", "review", false -%> <%= f.label "Review" %></p>
   		<p><%= check_box_tag "permissions[]", "commit", false -%> <%= f.label "Commit" %></p>
      	<p><%= check_box_tag "permissions[]", "admin", false -%> <%= f.label "Administrate" %></p>
