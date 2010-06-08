@@ -82,6 +82,7 @@ class RepositoriesController < ApplicationController
     @repository.owner = @project.owner
     @repository.user = current_user
     @repository.merge_requests_enabled = params[:repository][:merge_requests_enabled]
+    @repository.private_repo = params[:repository][:private_repo]
 
     if @repository.save
       flash[:success] = I18n.t("repositories_controller.create_success")
@@ -175,6 +176,7 @@ class RepositoriesController < ApplicationController
         @repository.replace_value(:name, params[:repository][:name])
         @repository.replace_value(:description, params[:repository][:description], true)
       end
+      @repository.private_repo = params[:repository][:private_repo]
       @repository.deny_force_pushing = params[:repository][:deny_force_pushing]
       @repository.notify_committers_on_new_merge_request = params[:repository][:notify_committers_on_new_merge_request]
       @repository.merge_requests_enabled = params[:repository][:merge_requests_enabled]

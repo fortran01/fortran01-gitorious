@@ -1,5 +1,6 @@
 <%
 #--
+#   Copyright (C) 2010 Marko Peltola <marko@markopeltola.com>
 #   Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies)
 #   Copyright (C) 2007, 2008 Johan Sørensen <johan@johansorensen.com>
 #   Copyright (C) 2008 Tor Arne Vestbø <tavestbo@trolltech.com>
@@ -36,6 +37,10 @@
     
     <div><%= f.text_area :description, :class => "text wide" -%><br /> <span class="hint">(<%= markdown_hint -%>)</span></div>
   </li>
+  <li>
+    <div><%= f.check_box :private_repo -%><span class="hint"></span></div>
+    <%= f.label :private_repo -%>
+  </li><br />
   <li>
     <%= f.label :enable_merge_requests -%>
     <div><%= f.check_box :merge_requests_enabled -%><span class="hint" style="float: left;"> <%= t("views.repos.merge_requests_enabled") -%></span></div>
