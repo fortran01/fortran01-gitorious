@@ -550,6 +550,10 @@ class Repository < ActiveRecord::Base
     a_user.is_a?(User) ? self.administrators.include?(a_user) : false
   end
 
+  def collaborator?(a_user)
+    self.admin?(a_user) || self.committer?(a_user) || self.reviewer?(a_user) || self.viewer?(a_user)
+  end
+
   # Is this repo writable by +a_user+, eg. does he have push permissions here
   # NOTE: this may be context-sensitive depending on the kind of repo
   def writable_by?(a_user)
