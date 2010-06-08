@@ -164,6 +164,20 @@ class ApplicationController < ActionController::Base
       @repository = Repository.find_by_name_and_project_id!(params[:repository_id], @project.id)
     end
     
+    def require_view_right_to_repository
+      unless @repository && @repository.can_be_viewed_by?(current_user)
+        flash[:error] = I18n.t "application.require_current_user"
+        redirect_to root_path and return
+      end
+    end
+    
+    def require_view_right_to_project
+      unless @project && @project.can_be_viewed_by?(current_user)
+        flash[:error] = I18n.t "application.require_current_user"
+        redirect_to root_path and return
+      end
+    end
+
     def check_repository_for_commits
       unless @repository.has_commits?
         flash[:notice] = I18n.t "application.no_commits_notice"
