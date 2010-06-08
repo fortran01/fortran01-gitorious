@@ -27,6 +27,8 @@ class RepositoriesController < ApplicationController
   before_filter :require_owner_adminship, :only => [:new, :create]
   before_filter :find_and_require_repository_adminship,
     :only => [:edit, :update, :confirm_delete, :destroy]
+  before_filter :find_and_require_repository_view_right, 
+    :except => [:index, :create, :new, :destroy, :config, :writable_by]
   before_filter :require_user_has_ssh_keys, :only => [:clone, :create_clone]
   before_filter :only_projects_can_add_new_repositories, :only => [:new, :create]
   skip_before_filter :public_and_logged_in, :only => [:writable_by, :config]
@@ -248,6 +250,16 @@ class RepositoriesController < ApplicationController
       unless @repository.admin?(current_user)
         respond_denied_and_redirect_to(repo_owner_path(@repository,
             :project_repository_path, @owner, @repository))
+        return
+      end
+    end
+
+    def find_and_require_repository_view_right
+      @repository = @owner.repositories.find_by_name_in_project!(params[:id],
+        @containing_project)
+      unless @repository.can_be_viewed_by?(current_user)
+        flash[:error] = I18n.t "application.require_current_user"
+        redirect_to root_path 
         return
       end
     end
