@@ -1,5 +1,6 @@
 # encoding: utf-8
 #--
+#   Copyright (C) 2010 Marko Peltola <marko@markopeltola.com>
 #   Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies)
 #   Copyright (C) 2007, 2008 Johan Sørensen <johan@johansorensen.com>
 #   Copyright (C) 2008 David A. Cuadrado <krawek@gmail.com>
@@ -28,6 +29,11 @@ class Project < ActiveRecord::Base
   include RecordThrottling
   include UrlLinting
   include Watchable
+
+  VISIBILITY_ALL            = 1
+  VISIBILITY_LOGGED_IN      = 2
+  VISIBILITY_COLLABORATORS  = 3
+  VISIBILITY_PUBLICS        = [VISIBILITY_ALL, VISIBILITY_LOGGED_IN]
 
   belongs_to  :user
   belongs_to  :owner, :polymorphic => true
@@ -183,6 +189,36 @@ class Project < ActiveRecord::Base
 
   def committer?(candidate)
     owner == User ? owner == candidate : owner.committer?(candidate)
+  end
+
+  def collaborator?(candidate)
+    repositories.mainlines.each do |repo|
+      return true if repo.collaborator?(candidate)
+    end
+    member?(candidate)
+  end
+
+  def visibility_all?
+    self.visibility == VISIBILITY_ALL
+  end
+
+  def visibility_logged_in?
+    self.visibility == VISIBILITY_LOGGED_IN
+  end
+
+  def visibility_collaborators?
+    self.visibility == VISIBILITY_COLLABORATORS
+  end
+
+  def visibility_all_or_logged_in?
+    VISIBILITY_PUBLICS.include? self.visibility
+  end
+
+  def can_be_viewed_by?(candidate)
+    return true if self.visibility_all?
+    return true if self.visibility_logged_in? && candidate != :false
+    return true if self.visibility_collaborators? && collaborator?(candidate)
+    return false
   end
 
   def owned_by_group?
