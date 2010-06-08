@@ -222,7 +222,11 @@ class Repository < ActiveRecord::Base
   end
 
   def clone_url
-    "git://#{GitoriousConfig['gitorious_host']}/#{gitdir}"
+    if self.private?
+      push_url
+    else
+      "git://#{GitoriousConfig['gitorious_host']}/#{gitdir}"
+    end
   end
 
   def http_clone_url
@@ -320,6 +324,12 @@ class Repository < ActiveRecord::Base
   # Can +a_user+ request a merge from this repository
   def can_request_merge?(a_user)
     !mainline? && writable_by?(a_user)
+  end
+
+  # Can +a_user+ view this repository
+  def can_be_viewed_by?(a_user)
+    return self.viewer?(a_user) if private_by_attribute?
+    return true # self.project.can_be_viewed_by?(a_user) # TODO
   end
 
   # changes the owner to +another_owner+, removes the old owner as committer
@@ -469,6 +479,20 @@ class Repository < ActiveRecord::Base
     kind == KIND_PROJECT_REPO
   end
 
+  def private_by_attribute?
+    false # private_repo # TODO
+  end
+
+# TODO
+#  def private_by_project?
+#    project.public_only_to_collaborators?
+#  end
+
+  # TODO Take into account projects visibility when it has been implemented
+  def private?
+    private_by_attribute? # || private_by_project?
+  end
+
   def mainline?
     project_repo?
   end
@@ -496,6 +520,11 @@ class Repository < ActiveRecord::Base
     committerships.reviewers.map{|c| c.members }.flatten.compact.uniq
   end
 
+  # Returns a list of Users who can see this repo
+  def viewers
+    committerships.viewers.map{|c| c.members }.flatten.compact.uniq
+  end
+
   # The list of users who can admin this repo, either directly as
   # committerships or indirectly as members of a group
   def administrators
@@ -508,6 +537,10 @@ class Repository < ActiveRecord::Base
 
   def reviewer?(a_user)
     a_user.is_a?(User) ? self.reviewers.include?(a_user) : false
+  end
+
+  def viewer?(a_user)
+    a_user.is_a?(User) ? self.viewers.include?(a_user) : false
   end
 
   def admin?(a_user)
