@@ -483,7 +483,7 @@ class Repository < ActiveRecord::Base
   end
 
   def private_by_attribute?
-    false # private_repo # TODO
+    private_repo
   end
 
 # TODO
