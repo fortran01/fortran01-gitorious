@@ -1,5 +1,6 @@
 # encoding: utf-8
 #--
+#   Copyright (C) 2010 Marko Peltola <marko@markopeltola.com>
 #   Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies)
 #   Copyright (C) 2007 Johan Sørensen <johan@johansorensen.com>
 #   Copyright (C) 2008 David A. Cuadrado <krawek@gmail.com>
@@ -21,11 +22,13 @@
 
 class Committership < ActiveRecord::Base
 
+  CAN_VIEW   = 1 << 3
   CAN_REVIEW = 1 << 4
   CAN_COMMIT = 1 << 5
   CAN_ADMIN  = 1 << 6
 
   PERMISSION_TABLE = {
+    :view   => CAN_VIEW,
     :review => CAN_REVIEW,
     :commit => CAN_COMMIT,
     :admin => CAN_ADMIN
@@ -49,13 +52,14 @@ class Committership < ActiveRecord::Base
 
   named_scope :groups, :conditions => { :committer_type => "Group" }
   named_scope :users,  :conditions => { :committer_type => "User" }
+  named_scope :viewers, :conditions => ["(permissions & ?)", CAN_VIEW]
   named_scope :reviewers, :conditions => ["(permissions & ?)", CAN_REVIEW]
   named_scope :committers, :conditions => ["(permissions & ?)", CAN_COMMIT]
   named_scope :admins, :conditions => ["(permissions & ?)", CAN_ADMIN]
 
   def self.create_for_owner!(an_owner)
     cs = new({:committer => an_owner})
-    cs.permissions = (CAN_REVIEW | CAN_COMMIT | CAN_ADMIN)
+    cs.permissions = (CAN_VIEW | CAN_REVIEW | CAN_COMMIT | CAN_ADMIN)
     cs.save!
     cs
   end
@@ -81,6 +85,10 @@ class Committership < ActiveRecord::Base
   def permitted?(wants_to)
     raise "unknown permission: #{wants_to.inspect}" if !PERMISSION_TABLE[wants_to]
     (self.permissions & PERMISSION_TABLE[wants_to]) != 0
+  end
+
+  def viewer?
+    permitted?(:view)
   end
 
   def reviewer?
