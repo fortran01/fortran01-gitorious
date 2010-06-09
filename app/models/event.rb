@@ -50,27 +50,28 @@ class Event < ActiveRecord::Base
   named_scope :excluding_private_repos, {:conditions =>
         ["target_type != ? or target_id in (?)", 
          "Repository", Repository.visibility_publics]}
+
   named_scope :visibility_publics, {:conditions =>
-    ["  target_type = :repo
+    ["  (target_type = :repo
         and exists (select id
                     from repositories 
-                    where id = target_id and id in (:pub_repos)
+                    where id = target_id and id in (:pub_repos)))
       or
-        target_type = :proj
+        (target_type = :proj
         and exists (select id
                     from projects
-                    where target_id = id and visibility in (:proj_vis_pubs))
+                    where target_id = id and visibility in (:proj_vis_pubs)))
       or
-        target_type = :merge_req
+        (target_type = :merge_req
         and exists (select id
                     from merge_requests
                     where id = target_id
                     and exists (select id
                                 from repositories
                                 where id = target_repository_id
-                                and id in (:pub_repos)))
+                                and id in (:pub_repos))))
       or 
-        target_type = :merge_req_version
+        (target_type = :merge_req_version
         and exists (select id
                     from merge_request_versions
                     where id = target_id
@@ -80,30 +81,26 @@ class Event < ActiveRecord::Base
                                 and exists (select id
                                             from repositories
                                             where id = target_repository_id
-                                            and id in (:pub_repos))))
+                                            and id in (:pub_repos)))))
       or 
-        target_type = :merge_req_status
+        (target_type = :merge_req_status
         and exists (select id
                     from merge_request_statuses
                     where id = target_id
                     and exists (select id 
                                 from projects
                                 where id = project_id
-                                and visibility in (:proj_vis_pubs)))
+                                and visibility in (:proj_vis_pubs))))
       or 
-        target_type in (:always_pub_types)",
+        target_type = :event",
     {:repo              => Repository,
      :proj              => Project,
      :merge_req         => MergeRequest,
      :merge_req_version => MergeRequestVersion,
      :merge_req_status  => MergeRequestStatus,
-     :always_pub_types  => [User, Event],
+     :event             => Event,
      :pub_repos         => Repository.visibility_publics,
      :proj_vis_pubs     => Project::VISIBILITY_PUBLICS} ]}
-     # Does Event really belong to always_pub_types?
-     # AFAIK (this is a guess..), events whose target_type is Event are 
-     # under some Event which in turn is not included in this query if 
-     # it's not public.
 
   def visibility_publics?
     return target.visibility_publics? if target.respond_to?("visibility_publics?")
