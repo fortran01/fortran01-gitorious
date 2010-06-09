@@ -17,6 +17,7 @@
 #++
 
 class PagesController < ApplicationController
+  before_filter :require_view_right_to_project
   before_filter :login_required, :except => [:index, :show]
   before_filter :find_project
   before_filter :check_if_wiki_enabled

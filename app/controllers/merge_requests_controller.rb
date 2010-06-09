@@ -26,6 +26,7 @@ class MergeRequestsController < ApplicationController
                                              :commit_status, :version]
   before_filter :find_repository_owner, :except => [:oauth_return, :direct_access]
   before_filter :find_repository, :except => [:oauth_return, :direct_access]
+  before_filter :require_view_right_to_repository, :except => [:oauth_return, :direct_access]
   before_filter :find_merge_request,
     :except => [:index, :show, :new, :create, :commit_list, :target_branches,
                 :oauth_return, :direct_access, :terms_accepted]

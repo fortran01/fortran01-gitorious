@@ -23,6 +23,8 @@ class CommittershipsController < ApplicationController
     :except => [:auto_complete_for_group_name, :auto_complete_for_user_login]
   before_filter :require_adminship,
     :except => [:auto_complete_for_group_name, :auto_complete_for_user_login]
+  before_filter :require_view_right_to_repository,
+    :except => [:auto_complete_for_group_name, :auto_complete_for_user_login]
   renders_in_site_specific_context
 
   def index

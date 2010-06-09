@@ -26,8 +26,10 @@ class ProjectsController < ApplicationController
     :only => [:create, :update, :destroy, :new, :edit, :confirm_delete]
   before_filter :check_if_only_site_admins_can_create, :only => [:new, :create]
   before_filter :find_project,
-    :only => [:show, :clones, :edit, :update, :confirm_delete, :edit_slug]
+    :only => [:show, :clones, :edit, :update, :preview, :confirm_delete, :edit_slug]
   before_filter :assure_adminship, :only => [:edit, :update, :edit_slug]
+  before_filter :require_view_right_to_project, 
+                :except => [:new, :create, :index, :destroy]
   before_filter :require_user_has_ssh_keys, :only => [:new, :create]
   renders_in_site_specific_context :only => [:show, :edit, :update, :confirm_delete]
   renders_in_global_context :except => [:show, :edit, :update, :confirm_delete, :clones]

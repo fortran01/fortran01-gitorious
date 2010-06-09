@@ -23,6 +23,7 @@ class TreesController < ApplicationController
   include ActiveMessaging::MessageSender
   before_filter :find_project_and_repository
   before_filter :check_repository_for_commits
+  before_filter :require_view_right_to_repository
   renders_in_site_specific_context
   
   def index

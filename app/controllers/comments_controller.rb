@@ -23,6 +23,7 @@
 class CommentsController < ApplicationController
   before_filter :login_required, :only => [:new, :create, :edit, :update, :destroy]
   before_filter :find_project_and_repository
+  before_filter :require_view_right_to_repository
   before_filter :find_polymorphic_parent
   before_filter :comment_should_be_editable, :only => [:edit, :update]
   renders_in_site_specific_context

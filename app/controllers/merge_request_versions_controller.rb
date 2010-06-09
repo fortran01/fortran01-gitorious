@@ -18,6 +18,8 @@
 
 class MergeRequestVersionsController < ApplicationController
   renders_in_site_specific_context
+  before_filter :find_repository
+  before_filter :require_view_right_to_repository
 
   def show
     @version = MergeRequestVersion.find(params[:id])
