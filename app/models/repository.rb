@@ -338,7 +338,7 @@ class Repository < ActiveRecord::Base
   # Can +a_user+ view this repository
   def can_be_viewed_by?(a_user)
     return self.viewer?(a_user) if private_by_attribute?
-    return true # self.project.can_be_viewed_by?(a_user) # TODO
+    return self.project.can_be_viewed_by?(a_user)
   end
 
   # changes the owner to +another_owner+, removes the old owner as committer
@@ -492,14 +492,12 @@ class Repository < ActiveRecord::Base
     private_repo
   end
 
-# TODO
-#  def private_by_project?
-#    project.public_only_to_collaborators?
-#  end
+  def private_by_project?
+    project.public_only_to_collaborators?
+  end
 
-  # TODO Take into account projects visibility when it has been implemented
   def private?
-    private_by_attribute? # || private_by_project?
+    private_by_attribute? || private_by_project?
   end
 
   def mainline?
