@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20100608115002) do
+ActiveRecord::Schema.define(:version => 20100609064319) do
 
   create_table "archived_events", :force => true do |t|
     t.integer  "user_id"
@@ -278,7 +278,7 @@ ActiveRecord::Schema.define(:version => 20100608115002) do
     t.string   "oauth_signoff_site"
     t.string   "oauth_path_prefix"
     t.text     "merge_request_custom_states"
-    t.boolean  "visibility",                  :default => true
+    t.integer  "visibility",                  :default => 1
   end
 
   add_index "projects", ["owner_type", "owner_id"], :name => "index_projects_on_owner_type_and_owner_id"
