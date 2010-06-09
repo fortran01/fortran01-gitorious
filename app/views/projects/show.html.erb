@@ -29,7 +29,9 @@
 </div>
 <div class="content-container w-750" id="repositories">
 <% @project.repositories.mainlines.each do |repo| -%>
-  <%= render :partial => "repositories/overview", :locals => {:repository => repo} -%>
+  <% if repo.can_be_viewed_by?(current_user) -%>
+    <%= render :partial => "repositories/overview", :locals => {:repository => repo} -%>
+  <% end -%>
 <% end -%>
 </div>
 <div class="content-container w-750" id="activities">
