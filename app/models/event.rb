@@ -105,6 +105,16 @@ class Event < ActiveRecord::Base
      # under some Event which in turn is not included in this query if 
      # it's not public.
 
+  def visibility_publics?
+    return target.visibility_publics? if target.respond_to?("visibility_publics?")
+    return true
+  end
+
+  def visibility_all?
+    return target.visibility_publics? if target.respond_to?("visibility_all?")
+    return true
+  end
+
   def self.latest(count)
     Rails.cache.fetch("events:latest_#{count}", :expires_in => 10.minutes) do
       latest_event_ids = Event.find_by_sql(
