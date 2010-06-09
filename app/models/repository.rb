@@ -493,7 +493,7 @@ class Repository < ActiveRecord::Base
   end
 
   def private_by_project?
-    project.public_only_to_collaborators?
+    project.visibility_collaborators?
   end
 
   def private?
