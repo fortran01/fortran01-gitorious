@@ -94,9 +94,14 @@ class Repository < ActiveRecord::Base
                                           [KIND_TEAM_REPO, KIND_USER_REPO]]
   named_scope :mainlines, :conditions => { :kind => KIND_PROJECT_REPO }
   
-  named_scope :visible_to_world, :conditions => ["private_repo = ?", false] # TODO project visibility
-     #and (select visibility from projects where id = project_id) = ?", 
-     #false, Project::PUBLICITY_WORLD]
+  named_scope :visibility_all, :conditions => ["private_repo = ?
+      and (select visibility from projects where id = project_id) = ?", 
+      false, Project::VISIBILITY_ALL]
+
+  named_scope :visibility_publics, :conditions => ["private_repo = ? 
+      and (select visibility from projects where id = project_id) in (?)", 
+      false, Project::VISIBILITY_PUBLICS]
+
   named_scope :regular, :conditions => ["kind in (?)", [KIND_TEAM_REPO, KIND_USER_REPO,
                                                        KIND_PROJECT_REPO]]
   is_indexed :fields => ["name", "description"],
