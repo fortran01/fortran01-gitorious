@@ -47,6 +47,63 @@ class Event < ActiveRecord::Base
     :include => [:user, :project]
   }
   named_scope :excluding_commits, {:conditions => ["action != ?", Action::COMMIT]}
+  named_scope :excluding_private_repos, {:conditions =>
+        ["target_type != ? or target_id in (?)", 
+         "Repository", Repository.visibility_publics]}
+  named_scope :visibility_publics, {:conditions =>
+    ["  target_type = :repo
+        and exists (select id
+                    from repositories 
+                    where id = target_id and id in (:pub_repos)
+      or
+        target_type = :proj
+        and exists (select id
+                    from projects
+                    where target_id = id and visibility in (:proj_vis_pubs))
+      or
+        target_type = :merge_req
+        and exists (select id
+                    from merge_requests
+                    where id = target_id
+                    and exists (select id
+                                from repositories
+                                where id = target_repository_id
+                                and id in (:pub_repos)))
+      or 
+        target_type = :merge_req_version
+        and exists (select id
+                    from merge_request_versions
+                    where id = target_id
+                    and exists (select id
+                                from merge_requests
+                                where id = merge_request_id
+                                and exists (select id
+                                            from repositories
+                                            where id = target_repository_id
+                                            and id in (:pub_repos))))
+      or 
+        target_type = :merge_req_status
+        and exists (select id
+                    from merge_request_statuses
+                    where id = target_id
+                    and exists (select id 
+                                from projects
+                                where id = project_id
+                                and visibility in (:proj_vis_pubs)))
+      or 
+        target_type in (:always_pub_types)",
+    {:repo              => Repository,
+     :proj              => Project,
+     :merge_req         => MergeRequest,
+     :merge_req_version => MergeRequestVersion,
+     :merge_req_status  => MergeRequestStatus,
+     :always_pub_types  => [User, Event],
+     :pub_repos         => Repository.visibility_publics,
+     :proj_vis_pubs     => Project::VISIBILITY_PUBLICS} ]}
+     # Does Event really belong to always_pub_types?
+     # AFAIK (this is a guess..), events whose target_type is Event are 
+     # under some Event which in turn is not included in this query if 
+     # it's not public.
 
   def self.latest(count)
     Rails.cache.fetch("events:latest_#{count}", :expires_in => 10.minutes) do
