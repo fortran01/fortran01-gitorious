@@ -49,6 +49,9 @@ class Project < ActiveRecord::Base
   has_many    :merge_request_statuses, :order => "id asc"
   accepts_nested_attributes_for :merge_request_statuses, :allow_destroy => true
 
+  named_scope :visibility_all, :conditions => ["visibility = ?", VISIBILITY_ALL]
+  named_scope :visibility_publics, :conditions => ["visibility in (?)", VISIBILITY_PUBLICS]
+
   serialize :merge_request_custom_states, Array
 
   attr_protected :owner_id, :user_id, :site_id
