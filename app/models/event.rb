@@ -53,15 +53,25 @@ class Event < ActiveRecord::Base
         ["target_type != ? or target_id in (?)", 
          "Repository", Repository.visibility_publics]}
 
+  def always_visible?
+    ALWAYS_PUBLIC_TARGETS.include? target_type
+  end
+
   def visibility_publics?
     return target.visibility_publics? if target.respond_to? "visibility_publics?"
-    return true if ALWAYS_PUBLIC_TARGETS.include? target_type
+    return true if always_visible?
     return false
   end
 
   def visibility_all?
     return target.visibility_all? if target.respond_to? "visibility_all?"
-    return true if ALWAYS_PUBLIC_TARGETS.include? target_type
+    return true if always_visible?
+    return false
+  end
+
+  def can_be_viewed_by?(user)
+    return target.can_be_viewed_by?(user) if target.respond_to? "can_be_viewed_by?"
+    return true if always_visible?
     return false
   end
 
