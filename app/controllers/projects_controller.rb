@@ -67,6 +67,7 @@ class ProjectsController < ApplicationController
   def show
     @owner = @project
     @root = @project
+    @repositories = @project.repositories.delete_if { |r| !r.can_be_viewed_by?(current_user) }
     @events = Rails.cache.fetch("paginated-project-events:#{@project.id}:#{params[:page] || 1}", :expires_in => 10.minutes) do
       events_finder_options = {}
       events_finder_options.merge!(@project.events.top.proxy_options)
