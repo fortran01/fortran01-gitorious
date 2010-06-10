@@ -67,15 +67,15 @@ class ProjectsController < ApplicationController
   def show
     @owner = @project
     @root = @project
-    @repositories = @project.repositories.delete_if { |r| !r.can_be_viewed_by?(current_user) }
+    @repositories = @project.repositories_viewable_by(current_user)
     @events = Rails.cache.fetch("paginated-project-events:#{@project.id}:#{params[:page] || 1}", :expires_in => 10.minutes) do
       events_finder_options = {}
       events_finder_options.merge!(@project.events.top.proxy_options)
       events_finder_options.merge!({:per_page => Event.per_page, :page => params[:page]})
       (@project.events.delete_if { |e| !e.can_be_viewed_by?(current_user) }).paginate(events_finder_options)
     end
-    @group_clones = @project.recently_updated_group_repository_clones
-    @user_clones = @project.recently_updated_user_repository_clones
+    @group_clones = @project.recently_updated_group_repository_clones(current_user)
+    @user_clones = @project.recently_updated_user_repository_clones(current_user)
     @atom_auto_discovery_url = project_path(@project, :format => :atom)
     respond_to do |format|
       format.html
@@ -86,8 +86,8 @@ class ProjectsController < ApplicationController
 
   def clones
     @owner = @project
-    @group_clones = @project.repositories_viewable_by(user).by_groups
-    @user_clones = @project.repositories_viewable_by(user).by_users
+    @group_clones = @project.repositories.by_groups.delete_if { |r| !r.can_be_viewed_by?(current_user) }
+    @user_clones = @project.repositories.by_users.delete_if { |r| !r.can_be_viewed_by?(current_user) }
     respond_to do |format|
       format.js { render :partial => "repositories" }
     end
