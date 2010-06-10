@@ -21,6 +21,8 @@
 
 class Event < ActiveRecord::Base
 
+  ALWAYS_PUBLIC_TARGETS = []
+
   MAX_COMMIT_EVENTS = 25
 
   belongs_to :user
@@ -103,13 +105,15 @@ class Event < ActiveRecord::Base
      :proj_vis_pubs     => Project::VISIBILITY_PUBLICS} ]}
 
   def visibility_publics?
-    return target.visibility_publics? if target.respond_to?("visibility_publics?")
-    return true
+    return target.visibility_publics? if target.respond_to? "visibility_publics?"
+    return true if ALWAYS_PUBLIC_TARGETS.include? target_type
+    return false
   end
 
   def visibility_all?
-    return target.visibility_publics? if target.respond_to?("visibility_all?")
-    return true
+    return target.visibility_all? if target.respond_to? "visibility_all?"
+    return true if ALWAYS_PUBLIC_TARGETS.include? target_type
+    return false
   end
 
   def self.latest(logged_in, count)
