@@ -162,13 +162,13 @@ class Project < ActiveRecord::Base
   end
 
   def recently_updated_group_repository_clones(user, limit = 5)
-    self.repositories_viewable_by(user).by_groups.find(:all, :limit => limit,
-      :order => "last_pushed_at desc")
+    self.repositories.by_groups.find(:all, :limit => limit,
+      :order => "last_pushed_at desc").delete_if { |r| !r.can_be_viewed_by?(user) }
   end
 
   def recently_updated_user_repository_clones(user, limit = 5)
-    self.repositories_viewable_by(user).by_users.find(:all, :limit => limit,
-      :order => "last_pushed_at desc")
+    self.repositories.by_users.find(:all, :limit => limit,
+      :order => "last_pushed_at desc").delete_if { |r| !r.can_be_viewed_by?(user) }
   end
 
   def to_param
