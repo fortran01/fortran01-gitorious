@@ -73,8 +73,8 @@ class ProjectsController < ApplicationController
       events_finder_options.merge!({:per_page => Event.per_page, :page => params[:page]})
       @project.events.paginate(events_finder_options)
     end
-    @group_clones = @project.recently_updated_group_repository_clones
-    @user_clones = @project.recently_updated_user_repository_clones
+    @group_clones = @project.recently_updated_group_repository_clones.delete_if { |r| !r.can_be_viewed_by?(current_user) }
+    @user_clones = @project.recently_updated_user_repository_clones.delete_if { |r| !r.can_be_viewed_by?(current_user) }
     @atom_auto_discovery_url = project_path(@project, :format => :atom)
     respond_to do |format|
       format.html
