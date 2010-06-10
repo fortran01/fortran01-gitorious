@@ -69,7 +69,7 @@ class SiteController < ApplicationController
       @active_projects = Project.most_active_recently(logged_in?, 15)
       @active_users = User.most_active
       @active_groups = Group.most_active
-      @latest_events = Event.latest(25)
+      @latest_events = Event.latest(logged_in?, 25)
       render :template => "site/index"
     end
 

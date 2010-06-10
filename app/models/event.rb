@@ -112,15 +112,20 @@ class Event < ActiveRecord::Base
     return true
   end
 
-  def self.latest(count)
+  def self.latest(logged_in, count)
     Rails.cache.fetch("events:latest_#{count}", :expires_in => 10.minutes) do
       latest_event_ids = Event.find_by_sql(
         ["select id,action,created_at from events " +
          "use index (index_events_on_created_at) where (action != ?) " +
          "order by created_at desc limit ?", Action::COMMIT, count
         ]).map(&:id)
-      Event.find(latest_event_ids, :order => "created_at desc",
+      events = Event.find(latest_event_ids, :order => "created_at desc",
         :include => [:user, :project, :events])
+      if logged_in
+        events.delete_if { |e| !e.visibility_publics? }
+      else
+        events.delete_if { |e| !e.visibility_all?     }
+      end
     end
   end
 
