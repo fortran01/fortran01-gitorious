@@ -71,7 +71,7 @@ class ProjectsController < ApplicationController
       events_finder_options = {}
       events_finder_options.merge!(@project.events.top.proxy_options)
       events_finder_options.merge!({:per_page => Event.per_page, :page => params[:page]})
-      @project.events.paginate(events_finder_options)
+      (@project.events.delete_if { |e| !e.can_be_viewed_by?(current_user) }).paginate(events_finder_options)
     end
     @group_clones = @project.recently_updated_group_repository_clones.delete_if { |r| !r.can_be_viewed_by?(current_user) }
     @user_clones = @project.recently_updated_user_repository_clones.delete_if { |r| !r.can_be_viewed_by?(current_user) }
