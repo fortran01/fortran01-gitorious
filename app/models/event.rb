@@ -134,17 +134,17 @@ class Event < ActiveRecord::Base
     end
   end
 
-  def self.latest_in_projects(count, project_ids)
+  def self.latest_in_projects(logged_in, count, project_ids)
     return [] if project_ids.blank?
     Rails.cache.fetch("events:latest_in_projects_#{project_ids.join("_")}_#{count}",
         :expires_in => 10.minutes) do
-      find(:all, {
+      events = find(:all, {
           :from => "#{quoted_table_name} use index (index_events_on_created_at)",
           :order => "events.created_at desc", :limit => count,
           :include => [:user, :project, :events],
           :conditions => ['events.action != ? and project_id in (?)',
-                          Action::COMMIT, project_ids]
-        })
+                          Action::COMMIT, project_ids] })
+      events.delete_if { |e| !e.visible?(logged_in) } # not pretty and screws the count, but works
     end
   end
 
