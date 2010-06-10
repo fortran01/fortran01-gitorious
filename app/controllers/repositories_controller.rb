@@ -41,6 +41,7 @@ class RepositoriesController < ApplicationController
     else
       @repositories = @owner.repositories.find(:all, :include => [:user, :events, :project])
     end
+    @repositories.delete_if { |r| !r.can_be_viewed_by?(current_user) }
     respond_to do |wants|
       wants.html
       wants.xml {render :xml => @repositories.to_xml}
