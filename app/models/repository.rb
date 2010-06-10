@@ -500,6 +500,14 @@ class Repository < ActiveRecord::Base
     private_by_attribute? || private_by_project?
   end
 
+  def visibility_all?
+    !private_repo && project.visibility_all?
+  end
+
+  def visibility_publics?
+    !private_repo && project.visibility_publics?
+  end
+
   def mainline?
     project_repo?
   end
