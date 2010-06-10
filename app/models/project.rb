@@ -228,6 +228,14 @@ class Project < ActiveRecord::Base
     return false
   end
 
+  def self.visibility_publics_or_all(logged_in)
+    if logged_in    
+      self.visibility_publics
+    else
+      self.visibility_all
+    end
+  end
+
   def owned_by_group?
     owner === Group
   end

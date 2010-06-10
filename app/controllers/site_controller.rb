@@ -64,7 +64,7 @@ class SiteController < ApplicationController
     end
 
     def render_public_timeline
-      @projects = Project.visibility_publics.find(:all, :limit => 10, :order => "id desc")
+      @projects = Project.visibility_publics_or_all(logged_in?).find(:all, :limit => 10, :order => "id desc")
       @top_repository_clones = Repository.most_active_clones
       @active_projects = Project.most_active_recently(logged_in?, 15)
       @active_users = User.most_active

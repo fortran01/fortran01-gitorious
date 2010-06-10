@@ -35,7 +35,7 @@ class ProjectsController < ApplicationController
   renders_in_global_context :except => [:show, :edit, :update, :confirm_delete, :clones]
 
   def index
-    @projects = Project.visibility_publics.paginate(:all, :order => "projects.created_at desc",
+    @projects = Project.visibility_publics_or_all(logged_in?).paginate(:all, :order => "projects.created_at desc",
                   :page => params[:page], :include => [:tags, { :repositories => :project } ])
 
     @atom_auto_discovery_url = projects_path(:format => :atom)
