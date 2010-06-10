@@ -74,8 +74,8 @@ class ProjectsController < ApplicationController
       events_finder_options.merge!({:per_page => Event.per_page, :page => params[:page]})
       (@project.events.delete_if { |e| !e.can_be_viewed_by?(current_user) }).paginate(events_finder_options)
     end
-    @group_clones = @project.recently_updated_group_repository_clones.delete_if { |r| !r.can_be_viewed_by?(current_user) }
-    @user_clones = @project.recently_updated_user_repository_clones.delete_if { |r| !r.can_be_viewed_by?(current_user) }
+    @group_clones = @project.recently_updated_group_repository_clones
+    @user_clones = @project.recently_updated_user_repository_clones
     @atom_auto_discovery_url = project_path(@project, :format => :atom)
     respond_to do |format|
       format.html
@@ -86,8 +86,8 @@ class ProjectsController < ApplicationController
 
   def clones
     @owner = @project
-    @group_clones = @project.repositories.by_groups
-    @user_clones = @project.repositories.by_users
+    @group_clones = @project.repositories_viewable_by(user).by_groups
+    @user_clones = @project.repositories_viewable_by(user).by_users
     respond_to do |format|
       format.js { render :partial => "repositories" }
     end
