@@ -217,7 +217,7 @@ class Project < ActiveRecord::Base
     self.visibility == VISIBILITY_COLLABORATORS
   end
 
-  def visibility_all_or_logged_in?
+  def visibility_publics?
     VISIBILITY_PUBLICS.include? self.visibility
   end
 
