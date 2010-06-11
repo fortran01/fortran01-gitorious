@@ -59,20 +59,17 @@ class Event < ActiveRecord::Base
 
   def visibility_publics?
     return target.visibility_publics? if target.respond_to? "visibility_publics?"
-    return true if always_visible?
-    return false
+    return always_visible?
   end
 
   def visibility_all?
     return target.visibility_all? if target.respond_to? "visibility_all?"
-    return true if always_visible?
-    return false
+    return always_visible?
   end
 
   def can_be_viewed_by?(user)
     return target.can_be_viewed_by?(user) if target.respond_to? "can_be_viewed_by?"
-    return true if always_visible?
-    return false
+    return always_visible?
   end
 
   def visible?(logged_in)
