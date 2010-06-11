@@ -43,14 +43,23 @@ class UsersController < ApplicationController
   end
 
   def show
-    @projects = @user.projects.find(:all,
-      :include => [:tags, { :repositories => :project }])
-    @repositories = @user.commit_repositories
+    @projects = if logged_in?
+                  @user.projects.visibility_publics.find(:all,
+                    :include => [:tags, { :repositories => :project }])
+                else
+                  @user.projects.visibility_all.find(:all,
+                    :include => [:tags, { :repositories => :project }])
+                end
+    @repositories = if logged_in?
+                      @user.commit_repositories.visibility_publics
+                    else
+                      @user.commit_repositories.visibility_all
+                    end
     @events = @user.events.excluding_commits.paginate(
       :page => params[:page], :order => "events.created_at desc",
-      :include => [:user, :project])
+      :include => [:user, :project]).delete_if { |e| !e.visible?(logged_in?) }
     @messages = @user.messages_in_inbox(3) if @user == current_user
-    @favorites = @user.favorites.all(:include => :watchable)
+    @favorites = @user.favorites.all(:include => :watchable).delete_if { |f| !f.visible?(logged_in?) }
 
     @atom_auto_discovery_url = feed_user_path(@user, :format => :atom)
     @atom_auto_discovery_title = "Public activity feed"
