@@ -73,7 +73,7 @@ class UsersController < ApplicationController
   def feed
     @user = User.find_by_login!(params[:id])
     @events = @user.events.find(:all, :order => "events.created_at desc",
-      :include => [:user, :project], :limit => 30)
+      :include => [:user, :project], :limit => 30).delete_if { |e| !e.visibility_all? }
     respond_to do |format|
       format.html { redirect_to user_path(@user) }
       format.atom { }
