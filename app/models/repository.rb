@@ -239,7 +239,7 @@ class Repository < ActiveRecord::Base
   end
 
   def http_clone_url
-    "http://git.#{GitoriousConfig['gitorious_host']}/#{gitdir}"
+    "http://git.#{GitoriousConfig['gitorious_host']}/#{gitdir}" unless self.private?
   end
 
   def http_cloning?
