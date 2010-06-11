@@ -63,8 +63,13 @@ class Favorite < ActiveRecord::Base
   end
 
   def can_be_viewed_by?(user)
-    return watchable.can_be_viewed_by?(user)? if watchable.respond_to?("visibility_can_be_viewed_by?")
+    return watchable.can_be_viewed_by?(user) if watchable.respond_to?("can_be_viewed_by?")
     return always_visible?
+  end
+
+  def visible?(logged_in)
+    return visibility_publics? if logged_in
+    return visibility_all?
   end
 
   def event_should_be_created?
