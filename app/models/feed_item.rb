@@ -21,6 +21,7 @@ class FeedItem < ActiveRecord::Base
   belongs_to :watcher, :class_name => "User"
 
   def self.bulk_create_from_watcher_list_and_event!(watcher_ids, event)
+    return unless event.visibility_all?
     return if watcher_ids.blank?
     # Build a FeedItem for all the watchers interested in the event
     sql_values = watcher_ids.map do |an_id|
