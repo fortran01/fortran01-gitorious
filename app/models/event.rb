@@ -235,6 +235,7 @@ class Event < ActiveRecord::Base
   end
 
   def create_feed_items
+    return unless self.visibility_all?
     return if self.action == Action::COMMIT
     FeedItem.bulk_create_from_watcher_list_and_event!(watcher_ids, self)
   end
