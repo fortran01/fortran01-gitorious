@@ -45,7 +45,7 @@ class Committership < ActiveRecord::Base
 
   attr_protected :permissions
 
-  after_create :notify_repository_owners
+  after_create :notify_repository_owners_and_collaborators
   after_create :add_new_committer_event
   after_destroy :add_removed_committer_event
   before_destroy :nullify_messages
@@ -128,9 +128,9 @@ class Committership < ActiveRecord::Base
   end
 
   protected
-    def notify_repository_owners
+    def notify_repository_owners_and_collaborators
       return unless creator
-      recipients = repository.owners
+      recipients = repository.owners + members
       recipients.each do |r|
         message = Message.new({
           :sender => creator,
