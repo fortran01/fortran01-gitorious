@@ -508,6 +508,14 @@ class Repository < ActiveRecord::Base
     !private_repo && project.visibility_publics?
   end
 
+  def visibility_logged_in?
+    !private_repo && project.visibility_logged_in?
+  end
+
+  def visibility_collaborators?
+    private?
+  end
+
   def mainline?
     project_repo?
   end
