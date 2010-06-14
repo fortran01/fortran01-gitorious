@@ -619,6 +619,13 @@
       :am => 'AM',
       :pm => 'PM',
     },
+    :visibility => {
+      :caption => "Visibility",
+      :private_by_attribute => "Visible to repository collaborators",
+      :private_by_project => "Visible to project collaborators",
+      :logged_in => "Visible to logged in users",
+      :all => "Visible to everyone",
+    },
     :activerecord => {
       :models => {
         :comment => "Comment",
