@@ -64,6 +64,10 @@
       <strong><%= t("views.repos.created") %>:</strong>
       <%= @repository.created_at.to_s(:short) -%>
     </li>
+    <li>
+      <strong><%= t("visibility.caption") %>:</strong>
+      <%= @repository.visibility_human_name -%>
+    </li>
   </ul>
 
   <ul class="links navigation">
