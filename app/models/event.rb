@@ -55,6 +55,31 @@ class Event < ActiveRecord::Base
         ["target_type != ? or target_id in (?)", 
          "Repository", Repository.visibility_publics]}
 
+  named_scope :visibility_all, {:conditions =>
+                ["  (target_type = :repo
+                    and exists (select id
+                                from repositories 
+                                where id = target_id and id in (:repo_vis_all)))
+                  or
+                    (target_type = :proj
+                    and exists (select id
+                                from projects
+                                where target_id = id and visibility = (:proj_vis_all)))
+                  or
+                    (target_type = :merge_req
+                    and exists (select id
+                                from merge_requests
+                                where id = target_id
+                                and exists (select id
+                                            from repositories
+                                            where id = target_repository_id
+                                            and id in (:repo_vis_all))))",
+                {:repo          => "Repository",
+                 :proj          => "Project",
+                 :merge_req     => "MergeRequest",
+                 :repo_vis_all  => Repository.visibility_all,
+                 :proj_vis_all  => Project::VISIBILITY_ALL}]}
+
   def always_visible?
     ALWAYS_PUBLIC_TARGETS.include? target_type
   end
