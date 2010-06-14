@@ -43,9 +43,9 @@ module ProjectsHelper
 
   def visibility_choices
     [
-      ["Visible to everyone", Project::VISIBILITY_ALL],
-      ["Visible to logged in users", Project::VISIBILITY_LOGGED_IN],
-      ["Visible to project members", Project::VISIBILITY_COLLABORATORS]
+      [t("visibility.all"), Project::VISIBILITY_ALL],
+      [t("visibility.logged_in"), Project::VISIBILITY_LOGGED_IN],
+      [t("visibility.private_by_project"), Project::VISIBILITY_COLLABORATORS]
     ]
   end
 
