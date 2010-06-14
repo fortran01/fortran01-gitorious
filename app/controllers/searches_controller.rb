@@ -30,10 +30,8 @@ class SearchesController < ApplicationController
       })
       @search.run
       @results = @search.results.delete_if do |result|
-        (result.class == Project && 
-          (result.visibility_collaborators? || (result.visibility_logged_in? && !logged_in?))) ||
-        (result.class == Repository &&
-          (result.private? || (result.project.visibility_logged_in? && !logged_in?)))
+        (result.respond_to?("visibility_collaborators?") && result.visibility_collaborators?) ||
+        (result.respond_to?("visibility_logged_in?")     && result.visibility_logged_in? && !logged_in?)
       end
     end
   rescue Ultrasphinx::UsageError
