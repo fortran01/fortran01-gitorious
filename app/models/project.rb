@@ -133,6 +133,12 @@ class Project < ActiveRecord::Base
     I18n.t("activerecord.models.project")
   end
 
+  def visibility_human_name
+    return I18n.t("visibility.private_by_project")   if visibility_collaborators?
+    return I18n.t("visibility.logged_in")            if visibility_logged_in?
+    return I18n.t("visibility.all")                  if visibility_all?
+  end
+
   def self.per_page() 20 end
 
   def self.top_tags(limit = 10)

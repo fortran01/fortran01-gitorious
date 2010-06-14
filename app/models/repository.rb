@@ -116,6 +116,13 @@ class Repository < ActiveRecord::Base
     I18n.t("activerecord.models.repository")
   end
 
+  def visibility_human_name
+    return I18n.t("visibility.private_by_attribute") if private_by_attribute?
+    return I18n.t("visibility.private_by_project")   if private_by_project?
+    return I18n.t("visibility.logged_in")            if visibility_logged_in?
+    return I18n.t("visibility.all")                  if visibility_all?
+  end
+
   def self.new_by_cloning(other, username=nil)
     suggested_name = username ? "#{username}s-#{other.name}" : nil
     new(:parent => other, :project => other.project, :name => suggested_name,
