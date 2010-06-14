@@ -96,11 +96,11 @@ class Repository < ActiveRecord::Base
   named_scope :mainlines, :conditions => { :kind => KIND_PROJECT_REPO }
   
   named_scope :visibility_all, :conditions => ["private_repo = ?
-      and (select visibility from projects where id = project_id) = ?", 
+      and exists (select id from projects where id = project_id and visibility = ?)", 
       false, Project::VISIBILITY_ALL]
 
   named_scope :visibility_publics, :conditions => ["private_repo = ? 
-      and (select visibility from projects where id = project_id) in (?)", 
+      and exists (select id from projects where id = project_id and visibility in (?))", 
       false, Project::VISIBILITY_PUBLICS]
 
   named_scope :regular, :conditions => ["kind in (?)", [KIND_TEAM_REPO, KIND_USER_REPO,
