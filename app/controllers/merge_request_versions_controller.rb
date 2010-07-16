@@ -20,13 +20,11 @@
 
 class MergeRequestVersionsController < ApplicationController
   renders_in_site_specific_context
-  before_filter :find_repository
+  before_filter :find_version_and_repository
   before_filter :require_view_right_to_repository
 
   def show
-    @version = MergeRequestVersion.find(params[:id])
     @diffs = @version.diffs(extract_range_from_parameter(params[:commit_shas]))
-    @repository = @version.merge_request.target_repository
 
     if params[:commit_shas] && !commit_range?(params[:commit_shas])
       @commit = @repository.git.commit(params[:commit_shas])
@@ -35,6 +33,13 @@ class MergeRequestVersionsController < ApplicationController
     respond_to do |wants|
       wants.js { render :layout => false }
     end
+  end
+
+  protected
+
+  def find_version_and_repository
+    @version = MergeRequestVersion.find(params[:id])
+    @repository = @version.merge_request.target_repository
   end
 
   private
