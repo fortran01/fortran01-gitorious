@@ -24,17 +24,17 @@
 
 class RepositoriesController < ApplicationController
   before_filter :login_required,
-    :except => [:index, :show, :writable_by, :config, :search_clones]
+    :except => [:index, :show, :writable_by, :viewable_by, :config, :search_clones]
   before_filter :find_repository_owner
   before_filter :require_owner_adminship, :only => [:new, :create]
   before_filter :find_and_require_repository_adminship,
     :only => [:edit, :update, :confirm_delete, :destroy]
   before_filter :find_and_require_repository_view_right, 
-    :except => [:index, :create, :new, :destroy, :config, :writable_by]
+    :except => [:index, :create, :new, :destroy, :config, :writable_by, :viewable_by]
   before_filter :require_user_has_ssh_keys, :only => [:clone, :create_clone]
   before_filter :only_projects_can_add_new_repositories, :only => [:new, :create]
-  skip_before_filter :public_and_logged_in, :only => [:writable_by, :config]
-  renders_in_site_specific_context :except => [:writable_by, :config]
+  skip_before_filter :public_and_logged_in, :only => [:writable_by, :viewable_by, :config]
+  renders_in_site_specific_context :except => [:writable_by, :viewable_by, :config]
 
   def index
     if term = params[:filter]
@@ -207,6 +207,17 @@ class RepositoriesController < ApplicationController
       render :text => "true" and return
     end
     render :text => 'false' and return
+  end
+
+  # Used internally to check view rights by gitorious
+  def viewable_by
+    @repository = @owner.repositories.find_by_name_in_project!(params[:id], @containing_project)
+    user = User.find_by_login(params[:username])
+
+    if user && @repository.can_be_viewed_by?(user)
+      render :text => "true" and return
+    end
+    render :text => "false" and return
   end
 
 
