@@ -190,7 +190,7 @@ class Project < ActiveRecord::Base
   # has view right to.
   def repositories_viewable_by(user)
     # The delete_if approach isn't very pretty..
-    self.repositories.delete_if { |r| !r.can_be_viewed_by?(user) }
+    self.repositories.mainlines.delete_if { |r| !r.can_be_viewed_by?(user) }
   end
 
   def recently_updated_group_repository_clones(user, limit = 5)
