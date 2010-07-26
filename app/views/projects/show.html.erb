@@ -111,5 +111,12 @@
     <% end -%>
     <%= render :partial => "repositories" -%>
   <% end -%>
-  
+
+<h4>Viewers</h4>
+<ul>
+  <% @viewers.each do |viewer| -%>
+	  <li><%= link_to viewer.title, viewer -%></li>
+  <% end -%>
+</ul>
+
 <% end -%>

@@ -172,6 +172,20 @@ class Project < ActiveRecord::Base
     p
   end
 
+  def viewers
+    v = []
+    case owner
+    when User
+      v << self.owner
+    when Group
+      v += owner.members
+    end
+    self.repositories.mainlines.each do |repo|
+      v += repo.viewers
+    end
+    v.uniq
+  end
+
   # Returns all repos of this project that the given user
   # has view right to.
   def repositories_viewable_by(user)
