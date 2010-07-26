@@ -625,6 +625,9 @@
       :private_by_project => "Visible to project collaborators",
       :logged_in => "Visible to logged in users",
       :all => "Visible to everyone",
+      :private_abbr => "pri",
+      :logged_in_abbr => "site",
+      :all_abbr => "all",
     },
     :activerecord => {
       :models => {
