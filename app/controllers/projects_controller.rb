@@ -39,8 +39,7 @@ class ProjectsController < ApplicationController
   def index
     @projects = Project.visibility_publics_or_all(logged_in?).paginate(:all, :order => "projects.created_at desc",
                   :page => params[:page], :include => [:tags, { :repositories => :project } ])
-    @user_projects = logged_in? ? current_user.projects.find(:all,
-        :order => "updated_at desc") : []
+    @user_projects = logged_in? ? Project.projects_for(current_user) : []
     @atom_auto_discovery_url = projects_path(:format => :atom)
     respond_to do |format|
       format.html {

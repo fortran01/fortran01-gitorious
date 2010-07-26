@@ -161,6 +161,17 @@ class Project < ActiveRecord::Base
     end
   end
 
+  # This is horrible
+  def self.projects_for(user)
+    p = user.projects
+    user.groups.each do |g|
+      g.projects.each do |gp|
+        p << gp if gp.collaborator?(user)
+      end
+    end
+    p
+  end
+
   # Returns all repos of this project that the given user
   # has view right to.
   def repositories_viewable_by(user)
