@@ -57,6 +57,12 @@ class Committership < ActiveRecord::Base
   named_scope :committers, :conditions => ["(permissions & ?)", CAN_COMMIT]
   named_scope :admins, :conditions => ["(permissions & ?)", CAN_ADMIN]
 
+  def validate
+    if !viewer? && self.permissions > 0
+      errors.add_to_base("Permissions don't make sense: collaborators need a view right")
+    end
+  end
+
   def self.create_for_owner!(an_owner)
     cs = new({:committer => an_owner})
     cs.permissions = (CAN_VIEW | CAN_REVIEW | CAN_COMMIT | CAN_ADMIN)
