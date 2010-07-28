@@ -85,6 +85,7 @@ class Committership < ActiveRecord::Base
 
   def build_permissions(*perms)
     perms = perms.flatten.compact.map{|p| p.to_sym }
+    perms << :view unless perms.empty?
     self.permissions = permission_mask_for(*perms)
   end
 
