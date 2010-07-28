@@ -72,7 +72,7 @@ class Committership < ActiveRecord::Base
 
   def self.create_with_permissions!(attrs, perms)
     cs = new(attrs)
-    cs.permissions = perms
+    cs.permissions = perms | CAN_VIEW
     cs.save!
     cs
   end
