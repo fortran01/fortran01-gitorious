@@ -76,7 +76,7 @@ class MergeRequestTest < ActiveSupport::TestCase
   should "not send messages even if notifications are on" do
     assert_equal 1, @merge_request.target_repository.committerships.count
     cs =  @merge_request.target_repository.committerships.first
-    cs.build_permissions(:review); cs.save!
+    cs.build_permissions([:view, :review]); cs.save!
     @merge_request.user = users(:mike)
     @merge_request.save
     assert_no_difference("Message.count", @merge_request.target_repository.reviewers.size) do
