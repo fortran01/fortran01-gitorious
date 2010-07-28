@@ -205,19 +205,19 @@ class CommittershipTest < ActiveSupport::TestCase
     end
 
     should "find all reviewers" do
-      @cs.build_permissions(:review)
+      @cs.build_permissions([:view,:review])
       @cs.save!
       assert Committership.reviewers.all.include?(@cs)
     end
 
     should "find all committers" do
-      @cs.build_permissions(:commit)
+      @cs.build_permissions([:view,:commit])
       @cs.save!
       assert Committership.committers.all.include?(@cs)
     end
 
     should "find all admins" do
-      @cs.build_permissions(:admin)
+      @cs.build_permissions([:view,:admin])
       @cs.save!
       assert Committership.admins.all.include?(@cs)
     end
