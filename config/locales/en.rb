@@ -406,6 +406,7 @@
         :edit_breadcrumb => "Edit Repository",
         :committers => "Committers",
         :current_committers => "Committers",
+        :collaborators => "Collaborators",
         :remove => "Remove",
         :clone_breadcrumb => "Clone Repository",
         :create_title => lambda { |this, clone, project|
