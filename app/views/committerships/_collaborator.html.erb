@@ -1,0 +1,17 @@
+<ul class="committers">
+  <h5><%= heading -%></h5>
+<% users.each do |user| -%>
+  <li>
+    <div class="user">
+      <%= avatar_from_email(user.email, :size => 16, :style => "tiny") %>
+      <%= link_to h(user.title), user -%>
+      <% if @repository.user == user -%>
+        <small class="hint">(<%= t("views.repos.creator") %>)</small>
+      <% end -%>
+    </div>
+  </li>
+<% end -%>
+<% if users.blank? -%>
+  <li><em>No users</em></li>
+<% end %>
+</ul>

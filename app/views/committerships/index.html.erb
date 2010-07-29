@@ -63,61 +63,9 @@
   </ul>
 
   <h4>Permission overview:</h4>
-
-  <ul class="committers">
-	  <h5>Reviewers</h5>
-  <% @repository.reviewers.each do |user| -%>
-    <li>
-      <div class="user">
-        <%= avatar_from_email(user.email, :size => 16, :style => "tiny") %>
-        <%= link_to h(user.title), user -%>
-        <% if @repository.user == user -%>
-          <small class="hint">(<%= t("views.repos.creator") %>)</small>
-        <% end -%>
-      </div>
-    </li>
-  <% end -%>
-  <% if @repository.reviewers.blank? -%>
-    <li><em>No users with review permissions</em></li>
-  <% end %>
-  </ul>
-
-
-  <ul class="committers">
-	  <h5>Committers</h5>
-  <% @repository.committers.each do |user| -%>
-    <li>
-      <div class="user">
-        <%= avatar_from_email(user.email, :size => 16, :style => "tiny") %>
-        <%= link_to h(user.title), user -%>
-        <% if @repository.user == user -%>
-          <small class="hint">(<%= t("views.repos.creator") %>)</small>
-        <% end -%>
-      </div>
-    </li>
-  <% end -%>
-  <% if @repository.committers.blank? -%>
-    <li><em>No users with commit permissions</em></li>
-  <% end %>
-  </ul>
-
-
-  <ul class="committers">
-	  <h5>Administrators</h5>
-  <% @repository.administrators.each do |user| -%>
-    <li>
-      <div class="user">
-        <%= avatar_from_email(user.email, :size => 16, :style => "tiny") %>
-        <%= link_to h(user.title), user -%>
-        <% if @repository.user == user -%>
-          <small class="hint">(<%= t("views.repos.creator") %>)</small>
-        <% end -%>
-      </div>
-    </li>
-  <% end -%>
-  <% if @repository.administrators.blank? -%>
-    <li><em>No users with administrate permissions</em></li>
-  <% end %>
-  </ul>
+  <%= render :partial => "collaborator", :locals => {:heading => "Viewers", :users => @repository.viewers} -%>
+  <%= render :partial => "collaborator", :locals => {:heading => "Reewers", :users => @repository.reviewers} -%>
+  <%= render :partial => "collaborator", :locals => {:heading => "Committers", :users => @repository.committers} -%>
+  <%= render :partial => "collaborator", :locals => {:heading => "Administrators", :users => @repository.administrators} -%>
 
 <% end -%>
