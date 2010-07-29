@@ -58,7 +58,9 @@ class Committership < ActiveRecord::Base
   named_scope :admins, :conditions => ["(permissions & ?)", CAN_ADMIN]
 
   def validate
-    if !viewer? && self.permissions > 0
+    if self.permissions == 0
+      errors.add_to_base("Can't add a collaborator without any rights")
+    elsif !viewer?
       errors.add_to_base("Permissions don't make sense: collaborators need a view right")
     end
   end
