@@ -105,15 +105,4 @@
   <% cache([@project, @repository, :clone_list], :expires_in => 5.minutes) do -%>
     <%= render "clone_list" -%>
   <% end -%>
-  <% if @repository.private? -%>
-    <h4>Viewers</h4>
-    <ul class="committers">
-      <% @repository.viewers.each do |viewer| -%>
-        <div class="user">
-          <%= avatar_from_email(viewer.email, :size => 16, :style => "tiny") %>
-          <li><%= link_to viewer.title, viewer -%></li>
-        </div>
-      <% end -%>
-    </ul>
-  <% end -%>
 <% end -%>
