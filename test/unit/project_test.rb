@@ -226,7 +226,7 @@ class ProjectTest < ActiveSupport::TestCase
     }
     assert_not_nil committership
     assert_equal(
-      Committership::CAN_REVIEW | Committership::CAN_COMMIT | Committership::CAN_ADMIN,
+      Committership::CAN_VIEW | Committership::CAN_REVIEW | Committership::CAN_COMMIT | Committership::CAN_ADMIN,
       committership.permissions)
   end
 
