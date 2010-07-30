@@ -97,7 +97,7 @@ class RepositoriesController < ApplicationController
   undef_method :clone
 
   def clone
-    @repository_to_clone = @owner.repositories.find_by_name_in_project!(params[:id], @containing_project)
+    @repository_to_clone = @repository
     @root = Breadcrumb::CloneRepository.new(@repository_to_clone)
     unless @repository_to_clone.has_commits?
       flash[:error] = I18n.t "repositories_controller.new_clone_error"
@@ -108,7 +108,7 @@ class RepositoriesController < ApplicationController
   end
 
   def create_clone
-    @repository_to_clone = @owner.repositories.find_by_name_in_project!(params[:id], @containing_project)
+    @repository_to_clone = @repository
     @root = Breadcrumb::CloneRepository.new(@repository_to_clone)
     unless @repository_to_clone.has_commits?
       respond_to do |format|
