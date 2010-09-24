@@ -273,11 +273,7 @@ class RepositoriesController < ApplicationController
     def find_and_require_repository_view_right
       @repository = @owner.repositories.find_by_name_in_project!(params[:id],
         @containing_project)
-      unless @repository.can_be_viewed_by?(current_user)
-        flash[:error] = I18n.t "application.require_current_user"
-        redirect_to root_path 
-        return
-      end
+      require_view_right_to_repository
     end
 
     def respond_denied_and_redirect_to(target)

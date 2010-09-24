@@ -165,19 +165,27 @@ class ApplicationController < ActionController::Base
       # realm, not just @project.repositories
       @repository = Repository.find_by_name_and_project_id!(params[:repository_id], @project.id)
     end
-    
+
+    def set_flash_msg_and_redirect(msg = nil, dest = nil)
+      msg  = I18n.t "application.require_current_user" if msg.nil?
+      dest = root_path if dest.nil?
+      flash[:error] = msg
+      redirect_to dest and return
+    end
+
+    def require_view_right_to(object)
+      set_flash_msg_and_redirect and return unless object
+      return true if object.visibility_all?
+      login_required or return
+      set_flash_msg_and_redirect unless object.can_be_viewed_by?(current_user)
+    end
+
     def require_view_right_to_repository
-      unless @repository && @repository.can_be_viewed_by?(current_user)
-        flash[:error] = I18n.t "application.require_current_user"
-        redirect_to root_path and return
-      end
+      require_view_right_to(@repository)
     end
     
     def require_view_right_to_project
-      unless @project && @project.can_be_viewed_by?(current_user)
-        flash[:error] = I18n.t "application.require_current_user"
-        redirect_to root_path and return
-      end
+      require_view_right_to(@project)
     end
 
     def check_repository_for_commits
