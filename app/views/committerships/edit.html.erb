@@ -25,23 +25,8 @@
 <%= error_messages_for :committership -%>
 <% form_for [@owner, @repository, @committership] do |f| -%>
 
-	<ul class="form">
-		<fieldset>
-			<li><%= f.label "View" %>
-				<div><%= check_box_tag "fake_tag", "view", @committership.viewer?, :disabled => 'disabled', :checked => 'checked' -%></div>
-				<%= hidden_field_tag "permissions[]", "view" -%>
-			</li>
-			<li><%= f.label "Review" %>
-				<div><%= check_box_tag "permissions[]", "review", @committership.reviewer? -%></div>
-			</li>
-			<li><%= f.label "Commit" %>
-				<div><%= check_box_tag "permissions[]", "commit", @committership.committer? -%></div>
-			</li>
-			<li><%= f.label "Administrate" %>
-				<div><%= check_box_tag "permissions[]", "admin", @committership.admin? -%></div>
-			</li>
-		</fieldset>
-	</ul>
+	<%= render :partial => "permissions_form", :locals => {:f => f} -%>
+
 	<fieldset class="submit">
 			<%= f.submit "Update permissions" -%>
 		    <%= t("views.collaborators.or_return_to") -%>
