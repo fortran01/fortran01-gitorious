@@ -40,6 +40,11 @@ test:
   # Enable or Disable Public Mode (true) or Private Mode (false)
   public_mode: true
 
+  # Can users change the visibility of their projects and repos.
+  # Defaults to true if no boolean value given so that private stuff don't
+  # accidentally get revealed if this option somehow gets missing.
+  visibility_feature_enabled: false
+
   # Define your locale
   locale: en
 

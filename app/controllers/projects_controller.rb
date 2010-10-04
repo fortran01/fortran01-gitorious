@@ -37,8 +37,10 @@ class ProjectsController < ApplicationController
   renders_in_global_context :except => [:show, :edit, :update, :confirm_delete, :clones]
 
   def index
-    @projects = Project.visibility_publics_or_all(logged_in?).paginate(:all, :order => "projects.created_at desc",
-                  :page => params[:page], :include => [:tags, { :repositories => :project } ])
+    @projects = (VisibilityFeatureEnabled ? Project.visibility_publics_or_all(logged_in?) : Project.all
+                ).paginate(:order => "projects.created_at desc",
+                           :page => params[:page],
+                           :include => [:tags, { :repositories => :project } ])
     @user_projects = logged_in? ? Project.projects_for(current_user) : []
     @atom_auto_discovery_url = projects_path(:format => :atom)
     respond_to do |format|
@@ -69,13 +71,15 @@ class ProjectsController < ApplicationController
   def show
     @owner = @project
     @root = @project
-    @repositories = @project.repositories_viewable_by(current_user)
+    @repositories = VisibilityFeatureEnabled ? @project.repositories_viewable_by(current_user) : @project.repositories.mainlines
     @viewers = @project.viewers
     @events = Rails.cache.fetch("paginated-project-events:#{@project.id}:#{params[:page] || 1}", :expires_in => 10.minutes) do
       events_finder_options = {}
       events_finder_options.merge!(@project.events.top.proxy_options)
       events_finder_options.merge!({:per_page => Event.per_page, :page => params[:page]})
-      (@project.events.delete_if { |e| !e.can_be_viewed_by?(current_user) }).paginate(events_finder_options)
+      events = @project.events
+      events.delete_if { |e| !e.can_be_viewed_by?(current_user) } if VisibilityFeatureEnabled
+      events.paginate(events_finder_options)
     end
     @group_clones = @project.recently_updated_group_repository_clones(current_user)
     @user_clones = @project.recently_updated_user_repository_clones(current_user)
@@ -89,8 +93,12 @@ class ProjectsController < ApplicationController
 
   def clones
     @owner = @project
-    @group_clones = @project.repositories.by_groups.delete_if { |r| !r.can_be_viewed_by?(current_user) }
-    @user_clones = @project.repositories.by_users.delete_if { |r| !r.can_be_viewed_by?(current_user) }
+    @group_clones = @project.repositories.by_groups
+    @user_clones  = @project.repositories.by_users
+    if VisibilityFeatureEnabled
+      @group_clones.delete_if { |r| !r.can_be_viewed_by?(current_user) }
+      @user_clones.delete_if  { |r| !r.can_be_viewed_by?(current_user) }
+    end
     respond_to do |format|
       format.js { render :partial => "repositories" }
     end

@@ -31,9 +31,12 @@ class SearchesController < ApplicationController
         :per_page => 30,
       })
       @search.run
-      @results = @search.results.delete_if do |result|
-        (result.respond_to?("visibility_collaborators?") && result.visibility_collaborators?) ||
-        (result.respond_to?("visibility_logged_in?")     && result.visibility_logged_in? && !logged_in?)
+      @results = @search.results
+      if VisibilityFeatureEnabled
+        @results.delete_if do |result|
+          (result.respond_to?("visibility_collaborators?") && result.visibility_collaborators?) ||
+          (result.respond_to?("visibility_logged_in?")     && result.visibility_logged_in? && !logged_in?)
+        end
       end
     end
   rescue Ultrasphinx::UsageError

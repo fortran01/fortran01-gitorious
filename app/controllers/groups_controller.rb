@@ -37,11 +37,17 @@ class GroupsController < ApplicationController
         :project_ids => @group.all_related_project_ids,
       }], 
       :order => "events.created_at desc", 
-      :include => [:user, :project]).delete_if { |e| !e.can_be_viewed_by?(current_user) }
+      :include => [:user, :project])
     @memberships = @group.memberships.find(:all, :include => [:user, :role])
-    @repositories = @group.repositories.mainlines.delete_if { |r| !r.can_be_viewed_by?(current_user) }
-    @projects = @group.projects.delete_if { |p| !p.can_be_viewed_by?(current_user) }
-    @clones = @group.repositories.clones.delete_if { |p| !p.can_be_viewed_by?(current_user) }
+    @repositories = @group.repositories.mainlines
+    @projects = @group.projects
+    @clones = @group.repositories.clones
+    if VisibilityFeatureEnabled
+      @events.delete_if       { |e| !e.can_be_viewed_by?(current_user) }
+      @repositories.delete_if { |r| !r.can_be_viewed_by?(current_user) }
+      @projects.delete_if     { |p| !p.can_be_viewed_by?(current_user) }
+      @clones.delete_if       { |p| !p.can_be_viewed_by?(current_user) }
+    end
   end
   
   def new

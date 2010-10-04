@@ -63,8 +63,8 @@
   </ul>
 
   <h4>Permission overview:</h4>
-  <%= render :partial => "collaborator", :locals => {:heading => "Viewers", :users => @repository.viewers} -%>
-  <%= render :partial => "collaborator", :locals => {:heading => "Reewers", :users => @repository.reviewers} -%>
+  <%= render :partial => "collaborator", :locals => {:heading => "Viewers", :users => @repository.viewers} if VisibilityFeatureEnabled-%>
+  <%= render :partial => "collaborator", :locals => {:heading => "Reviewers", :users => @repository.reviewers} -%>
   <%= render :partial => "collaborator", :locals => {:heading => "Committers", :users => @repository.committers} -%>
   <%= render :partial => "collaborator", :locals => {:heading => "Administrators", :users => @repository.administrators} -%>
 

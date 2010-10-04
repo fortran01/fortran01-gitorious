@@ -40,10 +40,12 @@
     <%= f.select(:head, @heads.map{|h| [h.name, h.name] }, 
           :selected => @repository.head ? @repository.head.name : nil) -%>
   </p>
-  <p>
-    <%= f.label :private_repo %>:
-    <%= f.check_box :private_repo %>
-  </p>
+  <% if VisibilityFeatureEnabled -%>
+    <p>
+      <%= f.label :private_repo %>:
+      <%= f.check_box :private_repo %>
+    </p>
+  <% end -%>
   <p>
     <%= f.label :deny_force_pushing %>:
     <%= f.check_box :deny_force_pushing %><br />

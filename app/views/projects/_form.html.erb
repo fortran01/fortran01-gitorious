@@ -73,11 +73,12 @@
     		<div><%= form.select :wiki_permissions, wiki_permission_choices -%></div>
   		</li>
 		<% end -%>
-		<li>
-		  <%= form.label :visibility, t(:visibility, :scope => 'activerecord.attributes.project') -%>
-		  <div><%= form.select :visibility, visibility_choices -%></div>
-		</li>
-
+    <% if VisibilityFeatureEnabled -%>
+		  <li>
+		    <%= form.label :visibility, t(:visibility, :scope => 'activerecord.attributes.project') -%>
+		    <div><%= form.select :visibility, visibility_choices -%></div>
+		  </li>
+		<% end -%>
 	</fieldset>
 	<fieldset>
 		<li>

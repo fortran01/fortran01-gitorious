@@ -113,7 +113,8 @@ class Event < ActiveRecord::Base
         ]).map(&:id)
       events = Event.find(latest_event_ids, :order => "created_at desc",
         :include => [:user, :project, :events])
-      events.delete_if { |e| !e.visible?(logged_in) }
+      events.delete_if { |e| !e.visible?(logged_in) } if VisibilityFeatureEnabled
+      events
     end
   end
 
@@ -127,7 +128,9 @@ class Event < ActiveRecord::Base
           :include => [:user, :project, :events],
           :conditions => ['events.action != ? and project_id in (?)',
                           Action::COMMIT, project_ids] })
-      events.delete_if { |e| !e.visible?(logged_in) } # not pretty and screws the count, but works
+      # not pretty and screws the count, but works
+      events.delete_if { |e| !e.visible?(logged_in) } if VisibilityFeatureEnabled
+      events
     end
   end
 

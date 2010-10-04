@@ -22,8 +22,10 @@
   <h4>What does the different permissions mean?</h4>
 
   <dl class="explanation">
-    <dt>Viewers:</dt>
-    <dd>Can see the repository</dd>
+    <% if VisibilityFeatureEnabled -%>
+      <dt>Viewers:</dt>
+      <dd>Can see the repository</dd>
+    <% end -%>
 
     <dt>Reviewers:</dt>
     <dd>Can update merge request statuses</dd>
