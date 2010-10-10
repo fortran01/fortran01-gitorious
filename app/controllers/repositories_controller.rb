@@ -1,5 +1,7 @@
 # encoding: utf-8
 #--
+#   Copyright (C) 2010 Marko Peltola <marko@markopeltola.com>
+#   Copyright (C) 2010 Tero Hänninen <tero.j.hanninen@jyu.fi>
 #   Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies)
 #   Copyright (C) 2007, 2008 Johan Sørensen <johan@johansorensen.com>
 #   Copyright (C) 2008 David A. Cuadrado <krawek@gmail.com>
@@ -22,15 +24,17 @@
 
 class RepositoriesController < ApplicationController
   before_filter :login_required,
-    :except => [:index, :show, :writable_by, :config, :search_clones]
+    :except => [:index, :show, :writable_by, :viewable_by, :config, :search_clones]
   before_filter :find_repository_owner
   before_filter :require_owner_adminship, :only => [:new, :create]
   before_filter :find_and_require_repository_adminship,
     :only => [:edit, :update, :confirm_delete, :destroy]
+  before_filter :find_and_require_repository_view_right, 
+    :except => [:index, :create, :new, :destroy, :config, :writable_by, :viewable_by]
   before_filter :require_user_has_ssh_keys, :only => [:clone, :create_clone]
   before_filter :only_projects_can_add_new_repositories, :only => [:new, :create]
-  skip_before_filter :public_and_logged_in, :only => [:writable_by, :config]
-  renders_in_site_specific_context :except => [:writable_by, :config]
+  skip_before_filter :public_and_logged_in, :only => [:writable_by, :viewable_by, :config]
+  renders_in_site_specific_context :except => [:writable_by, :viewable_by, :config]
 
   def index
     if term = params[:filter]
@@ -38,6 +42,7 @@ class RepositoriesController < ApplicationController
     else
       @repositories = @owner.repositories.find(:all, :include => [:user, :events, :project])
     end
+    @repositories.delete_if { |r| !r.can_be_viewed_by?(current_user) } if VisibilityFeatureEnabled
     respond_to do |wants|
       wants.html
       wants.xml {render :xml => @repositories.to_xml}
@@ -79,6 +84,7 @@ class RepositoriesController < ApplicationController
     @repository.owner = @project.owner
     @repository.user = current_user
     @repository.merge_requests_enabled = params[:repository][:merge_requests_enabled]
+    @repository.private_repo = VisibilityFeatureEnabled ? params[:repository][:private_repo] : false
 
     if @repository.save
       flash[:success] = I18n.t("repositories_controller.create_success")
@@ -91,7 +97,7 @@ class RepositoriesController < ApplicationController
   undef_method :clone
 
   def clone
-    @repository_to_clone = @owner.repositories.find_by_name_in_project!(params[:id], @containing_project)
+    @repository_to_clone = @repository
     @root = Breadcrumb::CloneRepository.new(@repository_to_clone)
     unless @repository_to_clone.has_commits?
       flash[:error] = I18n.t "repositories_controller.new_clone_error"
@@ -102,7 +108,7 @@ class RepositoriesController < ApplicationController
   end
 
   def create_clone
-    @repository_to_clone = @owner.repositories.find_by_name_in_project!(params[:id], @containing_project)
+    @repository_to_clone = @repository
     @root = Breadcrumb::CloneRepository.new(@repository_to_clone)
     unless @repository_to_clone.has_commits?
       respond_to do |format|
@@ -172,6 +178,7 @@ class RepositoriesController < ApplicationController
         @repository.replace_value(:name, params[:repository][:name])
         @repository.replace_value(:description, params[:repository][:description], true)
       end
+      @repository.private_repo = params[:repository][:private_repo] if VisibilityFeatureEnabled
       @repository.deny_force_pushing = params[:repository][:deny_force_pushing]
       @repository.notify_committers_on_new_merge_request = params[:repository][:notify_committers_on_new_merge_request]
       @repository.merge_requests_enabled = params[:repository][:merge_requests_enabled]
@@ -200,6 +207,17 @@ class RepositoriesController < ApplicationController
       render :text => "true" and return
     end
     render :text => 'false' and return
+  end
+
+  # Used internally to check view rights by gitorious
+  def viewable_by
+    @repository = @owner.repositories.find_by_name_in_project!(params[:id], @containing_project)
+    user = User.find_by_login(params[:username])
+
+    if user && @repository.can_be_viewed_by?(user)
+      render :text => "true" and return
+    end
+    render :text => "false" and return
   end
 
 
@@ -250,6 +268,12 @@ class RepositoriesController < ApplicationController
             :project_repository_path, @owner, @repository))
         return
       end
+    end
+
+    def find_and_require_repository_view_right
+      @repository = @owner.repositories.find_by_name_in_project!(params[:id],
+        @containing_project)
+      require_view_right_to_repository
     end
 
     def respond_denied_and_redirect_to(target)

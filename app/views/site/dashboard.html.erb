@@ -98,7 +98,7 @@
         <% @user.review_repositories_with_open_merge_request_count.each do |repo| %>
           <li>
             <%= link_to(repo.url_path + ": " + repo.open_merge_request_count,
-                 repo_owner_path(repo, [repo.project, repo, :merge_requests])) %>
+                 repo_owner_path(repo, [repo.project, repo, :merge_requests])) %> <span class="hint"><%= private_abbr(repo) %></span>
           </li>
         <% end %>
       </ul>
@@ -125,7 +125,7 @@
       <ul class="with_icons">
         <% @favorites.each do |favorite| %>
           <li class="<%= css_classes_for(favorite) -%>">
-            <%= link_to_watchable(favorite) -%>
+            <%= link_to_watchable(favorite) -%> <span class="hint"><%= private_abbr(favorite) %></span>
           </li>
         <% end %>
         <% if @favorites.blank? -%>
@@ -138,7 +138,7 @@
       <ul class="with_icons">
       <% @projects.each do |project| -%>
         <li class="project">
-          <%= link_to h(project.title), project -%>
+          <%= link_to h(project.title), project -%> <span class="hint"><%= private_abbr(project) %></span>
         </li>
       <% end -%>
 
@@ -169,7 +169,7 @@
         <% @repositories.each do |repo| -%>
           <li class="repository">
             <%= link_to h(repo.url_path),
-                  repo_owner_path(repo, [repo.project, repo]) -%>
+                  repo_owner_path(repo, [repo.project, repo]) -%> <span class="hint"><%= private_abbr(repo) %></span>
           </li>
         <% end -%>
       </ul>

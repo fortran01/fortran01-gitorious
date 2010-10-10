@@ -1,5 +1,7 @@
 # encoding: utf-8
 #--
+#   Copyright (C) 2010 Marko Peltola <marko@markopeltola.com>
+#   Copyright (C) 2010 Tero Hänninen <tero.j.hanninen@jyu.fi>
 #   Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies)
 #
 #   This program is free software: you can redistribute it and/or modify
@@ -19,6 +21,7 @@
 class PagesController < ApplicationController
   before_filter :login_required, :except => [:index, :show]
   before_filter :find_project
+  before_filter :require_view_right_to_project
   before_filter :check_if_wiki_enabled
   before_filter :assert_readyness
   before_filter :require_write_permissions, :only => [:edit, :update]

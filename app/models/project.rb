@@ -1,5 +1,7 @@
 # encoding: utf-8
 #--
+#   Copyright (C) 2010 Marko Peltola <marko@markopeltola.com>
+#   Copyright (C) 2010 Tero Hänninen <tero.j.hanninen@jyu.fi>
 #   Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies)
 #   Copyright (C) 2007, 2008 Johan Sørensen <johan@johansorensen.com>
 #   Copyright (C) 2008 David A. Cuadrado <krawek@gmail.com>
@@ -29,6 +31,11 @@ class Project < ActiveRecord::Base
   include UrlLinting
   include Watchable
 
+  VISIBILITY_ALL            = 1
+  VISIBILITY_LOGGED_IN      = 2
+  VISIBILITY_COLLABORATORS  = 3
+  VISIBILITY_PUBLICS        = [VISIBILITY_ALL, VISIBILITY_LOGGED_IN]
+
   belongs_to  :user
   belongs_to  :owner, :polymorphic => true
   has_many    :comments, :dependent => :destroy
@@ -37,11 +44,14 @@ class Project < ActiveRecord::Base
       :conditions => ["kind != ?", Repository::KIND_WIKI], :dependent => :destroy
   has_one     :wiki_repository, :class_name => "Repository",
     :conditions => ["kind = ?", Repository::KIND_WIKI], :dependent => :destroy
-  has_many    :events, :order => "created_at asc", :dependent => :destroy
+  has_many    :events, :order => "created_at desc", :dependent => :destroy
   has_many    :groups
   belongs_to  :containing_site, :class_name => "Site", :foreign_key => "site_id"
   has_many    :merge_request_statuses, :order => "id asc"
   accepts_nested_attributes_for :merge_request_statuses, :allow_destroy => true
+
+  named_scope :visibility_all, :conditions => ["visibility = ?", VISIBILITY_ALL]
+  named_scope :visibility_publics, :conditions => ["visibility in (?)", VISIBILITY_PUBLICS]
 
   serialize :merge_request_custom_states, Array
 
@@ -123,6 +133,12 @@ class Project < ActiveRecord::Base
     I18n.t("activerecord.models.project")
   end
 
+  def visibility_human_name
+    return I18n.t("visibility.private_by_project")   if visibility_collaborators?
+    return I18n.t("visibility.logged_in")            if visibility_logged_in?
+    return I18n.t("visibility.all")                  if visibility_all?
+  end
+
   def self.per_page() 20 end
 
   def self.top_tags(limit = 10)
@@ -131,24 +147,60 @@ class Project < ActiveRecord::Base
 
   # Returns the projects limited by +limit+ who has the most activity within
   # the +cutoff+ period
-  def self.most_active_recently(limit = 10, number_of_days = 3)
+  def self.most_active_recently(logged_in, limit = 10, number_of_days = 3)
     Rails.cache.fetch("projects:most_active_recently:#{limit}:#{number_of_days}",
         :expires_in => 30.minutes) do
+      scope = logged_in ? VISIBILITY_PUBLICS : [VISIBILITY_ALL]
       find(:all, :joins => :events, :limit => limit,
         :select => 'distinct projects.*, count(events.id) as event_count',
         :order => "event_count desc", :group => "projects.id",
-        :conditions => ["events.created_at > ?", number_of_days.days.ago])
+        :conditions => ["events.created_at > :days_ago
+                         and visibility in (:proj_vis_scope)",
+                       {:days_ago       => number_of_days.days.ago,
+                        :proj_vis_scope => scope}])
     end
   end
 
-  def recently_updated_group_repository_clones(limit = 5)
-    self.repositories.by_groups.find(:all, :limit => limit,
-      :order => "last_pushed_at desc")
+  # This is horrible
+  def self.projects_for(user)
+    p = user.projects
+    user.groups.each do |g|
+      g.projects.each do |gp|
+        p << gp if gp.collaborator?(user)
+      end
+    end
+    p
   end
 
-  def recently_updated_user_repository_clones(limit = 5)
+  def viewers
+    v = []
+    case owner
+    when User
+      v << self.owner
+    when Group
+      v += owner.members
+    end
+    self.repositories.mainlines.each do |repo|
+      v += repo.viewers
+    end
+    v.uniq
+  end
+
+  # Returns all repos of this project that the given user
+  # has view right to.
+  def repositories_viewable_by(user)
+    # The delete_if approach isn't very pretty..
+    self.repositories.mainlines.delete_if { |r| !r.can_be_viewed_by?(user) }
+  end
+
+  def recently_updated_group_repository_clones(user, limit = 5)
+    self.repositories.by_groups.find(:all, :limit => limit,
+      :order => "last_pushed_at desc").delete_if { |r| !r.can_be_viewed_by?(user) }
+  end
+
+  def recently_updated_user_repository_clones(user, limit = 5)
     self.repositories.by_users.find(:all, :limit => limit,
-      :order => "last_pushed_at desc")
+      :order => "last_pushed_at desc").delete_if { |r| !r.can_be_viewed_by?(user) }
   end
 
   def to_param
@@ -183,6 +235,44 @@ class Project < ActiveRecord::Base
 
   def committer?(candidate)
     owner == User ? owner == candidate : owner.committer?(candidate)
+  end
+
+  def collaborator?(candidate)
+    repositories.mainlines.each do |repo|
+      return true if repo.collaborator?(candidate)
+    end
+    member?(candidate)
+  end
+
+  def visibility_all?
+    self.visibility == VISIBILITY_ALL
+  end
+
+  def visibility_logged_in?
+    self.visibility == VISIBILITY_LOGGED_IN
+  end
+
+  def visibility_collaborators?
+    self.visibility == VISIBILITY_COLLABORATORS
+  end
+
+  def visibility_publics?
+    VISIBILITY_PUBLICS.include? self.visibility
+  end
+
+  def can_be_viewed_by?(candidate)
+    return true if self.visibility_all?
+    return true if self.visibility_logged_in? && candidate != :false
+    return true if self.visibility_collaborators? && collaborator?(candidate)
+    return false
+  end
+
+  def self.visibility_publics_or_all(logged_in)
+    if logged_in    
+      self.visibility_publics
+    else
+      self.visibility_all
+    end
   end
 
   def owned_by_group?

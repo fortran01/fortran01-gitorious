@@ -1,5 +1,7 @@
 # encoding: utf-8
 #--
+#   Copyright (C) 2010 Marko Peltola <marko@markopeltola.com>
+#   Copyright (C) 2010 Tero Hänninen <tero.j.hanninen@jyu.fi>
 #   Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies)
 #
 #   This program is free software: you can redistribute it and/or modify
@@ -17,6 +19,9 @@
 #++
 
 class Favorite < ActiveRecord::Base
+
+  ALWAYS_PUBLIC_WATCHABLES = [] # If e.g. users could be watchables, User could be added here
+
   belongs_to :user
   belongs_to :watchable, :polymorphic => true
   before_destroy :destroy_event
@@ -43,6 +48,30 @@ class Favorite < ActiveRecord::Base
     when Project
       watchable
     end
+  end
+
+  def always_visible?
+    ALWAYS_PUBLIC_WATCHABLES.include? watchable.class
+  end
+
+  def visibility_all?
+    return watchable.visibility_all? if watchable.respond_to?("visibility_all?")
+    return always_visible?
+  end
+
+  def visibility_publics?
+    return watchable.visibility_publics? if watchable.respond_to?("visibility_publics?")
+    return always_visible?
+  end
+
+  def can_be_viewed_by?(user)
+    return watchable.can_be_viewed_by?(user) if watchable.respond_to?("can_be_viewed_by?")
+    return always_visible?
+  end
+
+  def visible?(logged_in)
+    return visibility_publics? if logged_in
+    return visibility_all?
   end
 
   def event_should_be_created?

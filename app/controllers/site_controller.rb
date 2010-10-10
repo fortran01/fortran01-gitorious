@@ -1,5 +1,7 @@
 # encoding: utf-8
 #--
+#   Copyright (C) 2010 Marko Peltola <marko@markopeltola.com>
+#   Copyright (C) 2010 Tero Hänninen <tero.j.hanninen@jyu.fi>
 #   Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies)
 #   Copyright (C) 2008 Johan Sørensen <johan@johansorensen.com>
 #   Copyright (C) 2008 David A. Cuadrado <krawek@gmail.com>
@@ -56,20 +58,20 @@ class SiteController < ApplicationController
 
     # Render a Site-specific index template
     def render_site_index
-      @projects = current_site.projects.find(:all, :order => "created_at asc")
+      @projects = current_site.projects.visibility_publics_or_all(logged_in?).find(:all, :order => "created_at asc")
       @teams = Group.all_participating_in_projects(@projects)
       @top_repository_clones = Repository.most_active_clones_in_projects(@projects)
-      @latest_events = Event.latest_in_projects(25, @projects.map{|p| p.id })
+      @latest_events = Event.latest_in_projects(logged_in?, 25, @projects.map{|p| p.id })
       render "site/#{current_site.subdomain}/index"
     end
 
     def render_public_timeline
-      @projects = Project.find(:all, :limit => 10, :order => "id desc")
+      @projects = Project.visibility_publics_or_all(logged_in?).find(:all, :limit => 10, :order => "id desc")
       @top_repository_clones = Repository.most_active_clones
-      @active_projects = Project.most_active_recently(15)
+      @active_projects = Project.most_active_recently(logged_in?, 15)
       @active_users = User.most_active
       @active_groups = Group.most_active
-      @latest_events = Event.latest(25)
+      @latest_events = Event.latest(logged_in?, 25)
       render :template => "site/index"
     end
 

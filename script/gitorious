@@ -66,6 +66,8 @@ begin
   ENV['GITORIOUS_BASE_DIR'] = BASE_DIR
   ENV['GITORIOUS_DENY_FORCE_PUSHES'] = client.force_pushing_denied? ? "true" : "false"
 
+  client.assure_user_can_view!
+
   logger.info("Accepted #{user.inspect} for #{args.inspect}")
   if client.pre_receive_hook_exists?
     exec("git-shell", "-c", args)

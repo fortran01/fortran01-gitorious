@@ -20,6 +20,7 @@
 
 require "net/http"
 require 'uri'
+require "open-uri"
 
 module Gitorious
   module SSH  
@@ -39,19 +40,32 @@ module Gitorious
         query_for_permission_and_path
         @writable == "true"
       end
-    
+
       def assure_user_can_write!
         writable_by_user? || raise(AccessDeniedError)
       end
+
+      def assure_user_can_view!
+        viewable_by_user? || raise(AccessDeniedError)
+      end
     
+      def viewable_by_user?
+        open(viewable_by_query_url).read == "true"
+      end
+
+      # The full URL
+      def viewable_by_query_url
+        query_uri("viewable_by").to_s
+      end
+
       # The full URL
       def writable_by_query_url
-        writable_by_query_uri.to_s
+        query_uri("writable_by").to_s
       end
 
       # The path only
       def writable_by_query_path
-        writable_by_query_uri.request_uri
+        query_uri("writable_by").request_uri
       end
       
       def real_path
@@ -105,8 +119,8 @@ module Gitorious
         end
         
         # Returns an actual URI object
-        def writable_by_query_uri
-          path = "/#{@project_name}/#{@repository_name}/writable_by"
+        def query_uri(query_method)
+          path = "/#{@project_name}/#{@repository_name}/#{query_method}"
           query = "username=#{@user_name}"
           host = GitoriousConfig['gitorious_client_host']
           _port = GitoriousConfig['gitorious_client_port']

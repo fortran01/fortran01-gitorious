@@ -1,5 +1,7 @@
 # encoding: utf-8
 #--
+#   Copyright (C) 2010 Marko Peltola <marko@markopeltola.com>
+#   Copyright (C) 2010 Tero Hänninen <tero.j.hanninen@jyu.fi>
 #   Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies)
 #   Copyright (C) 2008 Johan Sørensen <johan@johansorensen.com>
 #   Copyright (C) 2008 David A. Cuadrado <krawek@gmail.com>
@@ -26,6 +28,7 @@ class MergeRequestsController < ApplicationController
                                              :commit_status, :version]
   before_filter :find_repository_owner, :except => [:oauth_return, :direct_access]
   before_filter :find_repository, :except => [:oauth_return, :direct_access]
+  before_filter :require_view_right_to_repository, :except => [:oauth_return, :direct_access]
   before_filter :find_merge_request,
     :except => [:index, :show, :new, :create, :commit_list, :target_branches,
                 :oauth_return, :direct_access, :terms_accepted]

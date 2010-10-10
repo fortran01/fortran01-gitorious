@@ -1,5 +1,7 @@
 # encoding: utf-8
 #--
+#   Copyright (C) 2010 Marko Peltola <marko@markopeltola.com>
+#   Copyright (C) 2010 Tero Hänninen <tero.j.hanninen@jyu.fi>
 #   Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies)
 #   Copyright (C) 2007, 2008 Johan Sørensen <johan@johansorensen.com>
 #   Copyright (C) 2008 David A. Cuadrado <krawek@gmail.com>
@@ -26,20 +28,24 @@ class ProjectsController < ApplicationController
     :only => [:create, :update, :destroy, :new, :edit, :confirm_delete]
   before_filter :check_if_only_site_admins_can_create, :only => [:new, :create]
   before_filter :find_project,
-    :only => [:show, :clones, :edit, :update, :confirm_delete, :edit_slug]
+    :only => [:show, :clones, :edit, :update, :preview, :confirm_delete, :edit_slug]
   before_filter :assure_adminship, :only => [:edit, :update, :edit_slug]
+  before_filter :require_view_right_to_project, 
+                :except => [:new, :create, :index, :destroy]
   before_filter :require_user_has_ssh_keys, :only => [:new, :create]
   renders_in_site_specific_context :only => [:show, :edit, :update, :confirm_delete]
   renders_in_global_context :except => [:show, :edit, :update, :confirm_delete, :clones]
 
   def index
-    @projects = Project.paginate(:all, :order => "projects.created_at desc",
-                  :page => params[:page], :include => [:tags, { :repositories => :project } ])
-
+    @projects = (VisibilityFeatureEnabled ? Project.visibility_publics_or_all(logged_in?) : Project.all
+                ).paginate(:order => "projects.created_at desc",
+                           :page => params[:page],
+                           :include => [:tags, { :repositories => :project } ])
+    @user_projects = logged_in? ? Project.projects_for(current_user) : []
     @atom_auto_discovery_url = projects_path(:format => :atom)
     respond_to do |format|
       format.html {
-        @active_recently = Project.most_active_recently
+        @active_recently = Project.most_active_recently(logged_in?)
         @tags = Project.top_tags
       }
       format.xml  { render :xml => @projects }
@@ -65,14 +71,18 @@ class ProjectsController < ApplicationController
   def show
     @owner = @project
     @root = @project
+    @repositories = VisibilityFeatureEnabled ? @project.repositories_viewable_by(current_user) : @project.repositories.mainlines
+    @viewers = @project.viewers
     @events = Rails.cache.fetch("paginated-project-events:#{@project.id}:#{params[:page] || 1}", :expires_in => 10.minutes) do
       events_finder_options = {}
       events_finder_options.merge!(@project.events.top.proxy_options)
       events_finder_options.merge!({:per_page => Event.per_page, :page => params[:page]})
-      @project.events.paginate(events_finder_options)
+      events = @project.events
+      events.delete_if { |e| !e.can_be_viewed_by?(current_user) } if VisibilityFeatureEnabled
+      events.paginate(events_finder_options)
     end
-    @group_clones = @project.recently_updated_group_repository_clones
-    @user_clones = @project.recently_updated_user_repository_clones
+    @group_clones = @project.recently_updated_group_repository_clones(current_user)
+    @user_clones = @project.recently_updated_user_repository_clones(current_user)
     @atom_auto_discovery_url = project_path(@project, :format => :atom)
     respond_to do |format|
       format.html
@@ -84,7 +94,11 @@ class ProjectsController < ApplicationController
   def clones
     @owner = @project
     @group_clones = @project.repositories.by_groups
-    @user_clones = @project.repositories.by_users
+    @user_clones  = @project.repositories.by_users
+    if VisibilityFeatureEnabled
+      @group_clones.delete_if { |r| !r.can_be_viewed_by?(current_user) }
+      @user_clones.delete_if  { |r| !r.can_be_viewed_by?(current_user) }
+    end
     respond_to do |format|
       format.js { render :partial => "repositories" }
     end

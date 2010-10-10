@@ -1,5 +1,7 @@
 # encoding: utf-8
 #--
+#   Copyright (C) 2010 Marko Peltola <marko@markopeltola.com>
+#   Copyright (C) 2010 Tero Hänninen <tero.j.hanninen@jyu.fi>
 #   Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies)
 #
 #   This program is free software: you can redistribute it and/or modify
@@ -22,6 +24,8 @@ class CommittershipsController < ApplicationController
   before_filter :find_repository,
     :except => [:auto_complete_for_group_name, :auto_complete_for_user_login]
   before_filter :require_adminship,
+    :except => [:auto_complete_for_group_name, :auto_complete_for_user_login]
+  before_filter :require_view_right_to_repository,
     :except => [:auto_complete_for_group_name, :auto_complete_for_user_login]
   renders_in_site_specific_context
 
@@ -62,13 +66,7 @@ class CommittershipsController < ApplicationController
 
   def update
     @committership = @repository.committerships.find(params[:id])
-    if !params[:permissions].blank?
-      @committership.build_permissions(params[:permissions])
-    else
-      flash[:error] = "No permissions selected"
-      render("edit") and return
-    end
-
+    @committership.build_permissions(params[:permissions])
     if @committership.save
       flash[:success] = "Permissions updated"
       redirect_to([@owner, @repository, :committerships])

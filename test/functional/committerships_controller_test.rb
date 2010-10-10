@@ -132,7 +132,7 @@ class CommittershipsControllerTest < ActionController::TestCase
       assert_equal @group, assigns(:committership).committer
       assert_equal @user, assigns(:committership).creator
       assert_equal "Team added as committers", flash[:success]
-      assert_equal [:review], assigns(:committership).permission_list
+      assert_equal [:review, :view], assigns(:committership).permission_list.sort_by(&:to_s)
     end
 
     should "add a User as having committership" do
@@ -183,7 +183,7 @@ class CommittershipsControllerTest < ActionController::TestCase
     should_assign_to(:committership, :equals => @committership)
 
     should "update the permission" do
-      assert_equal [:review], @committership.reload.permission_list
+      assert_equal [:review, :view], @committership.reload.permission_list.sort_by(&:to_s)
     end
   end
 

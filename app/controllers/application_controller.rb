@@ -1,5 +1,7 @@
 # encoding: utf-8
 #--
+#   Copyright (C) 2010 Marko Peltola <marko@markopeltola.com>
+#   Copyright (C) 2010 Tero Hänninen <tero.j.hanninen@jyu.fi>
 #   Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies)
 #   Copyright (C) 2007, 2008 Johan Sørensen <johan@johansorensen.com>
 #
@@ -163,7 +165,29 @@ class ApplicationController < ActionController::Base
       # realm, not just @project.repositories
       @repository = Repository.find_by_name_and_project_id!(params[:repository_id], @project.id)
     end
+
+    def set_flash_msg_and_redirect(msg = nil, dest = nil)
+      msg  = I18n.t "application.require_current_user" if msg.nil?
+      dest = root_path if dest.nil?
+      flash[:error] = msg
+      redirect_to dest and return
+    end
+
+    def require_view_right_to(object)
+      set_flash_msg_and_redirect and return unless object
+      return true if object.visibility_all?
+      login_required or return
+      set_flash_msg_and_redirect unless object.can_be_viewed_by?(current_user)
+    end
+
+    def require_view_right_to_repository
+      require_view_right_to(@repository)
+    end
     
+    def require_view_right_to_project
+      require_view_right_to(@project)
+    end
+
     def check_repository_for_commits
       unless @repository.has_commits?
         flash[:notice] = I18n.t "application.no_commits_notice"

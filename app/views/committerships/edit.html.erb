@@ -1,5 +1,6 @@
 <%
 #--
+#   Copyright (C) 2010 Marko Peltola <marko@markopeltola.com>
 #   Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies)
 #
 #   This program is free software: you can redistribute it and/or modify
@@ -24,19 +25,8 @@
 <%= error_messages_for :committership -%>
 <% form_for [@owner, @repository, @committership] do |f| -%>
 
-	<ul class="form">
-		<fieldset>
-			<li><%= f.label "Review" %>
-				<div><%= check_box_tag "permissions[]", "review", @committership.reviewer? -%></div>
-			</li>
-			<li><%= f.label "Commit" %>
-				<div><%= check_box_tag "permissions[]", "commit", @committership.committer? -%></div>
-			</li>
-			<li><%= f.label "Administrate" %>
-				<div><%= check_box_tag "permissions[]", "admin", @committership.admin? -%></div>
-			</li>
-		</fieldset>
-	</ul>
+	<%= render :partial => "permissions_form", :locals => {:f => f} -%>
+
 	<fieldset class="submit">
 			<%= f.submit "Update permissions" -%>
 		    <%= t("views.collaborators.or_return_to") -%>

@@ -1,5 +1,6 @@
 # encoding: utf-8
 #--
+#   Copyright (C) 2010 Marko Peltola <marko@markopeltola.com>
 #   Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies)
 #   Copyright (C) 2007 Johan Sørensen <johan@johansorensen.com>
 #   Copyright (C) 2008 David A. Cuadrado <krawek@gmail.com>
@@ -21,11 +22,13 @@
 
 class Committership < ActiveRecord::Base
 
+  CAN_VIEW   = 1 << 3
   CAN_REVIEW = 1 << 4
   CAN_COMMIT = 1 << 5
   CAN_ADMIN  = 1 << 6
 
   PERMISSION_TABLE = {
+    :view   => CAN_VIEW,
     :review => CAN_REVIEW,
     :commit => CAN_COMMIT,
     :admin => CAN_ADMIN
@@ -42,27 +45,36 @@ class Committership < ActiveRecord::Base
 
   attr_protected :permissions
 
-  after_create :notify_repository_owners
+  after_create :notify_repository_owners_and_collaborators
   after_create :add_new_committer_event
   after_destroy :add_removed_committer_event
   before_destroy :nullify_messages
 
   named_scope :groups, :conditions => { :committer_type => "Group" }
   named_scope :users,  :conditions => { :committer_type => "User" }
+  named_scope :viewers, :conditions => ["(permissions & ?)", CAN_VIEW]
   named_scope :reviewers, :conditions => ["(permissions & ?)", CAN_REVIEW]
   named_scope :committers, :conditions => ["(permissions & ?)", CAN_COMMIT]
   named_scope :admins, :conditions => ["(permissions & ?)", CAN_ADMIN]
 
+  def validate
+    if self.permissions == 0
+      errors.add_to_base("Can't add a collaborator without any rights")
+    elsif !viewer?
+      errors.add_to_base("Permissions don't make sense: collaborators need a view right")
+    end
+  end
+
   def self.create_for_owner!(an_owner)
     cs = new({:committer => an_owner})
-    cs.permissions = (CAN_REVIEW | CAN_COMMIT | CAN_ADMIN)
+    cs.permissions = (CAN_VIEW | CAN_REVIEW | CAN_COMMIT | CAN_ADMIN)
     cs.save!
     cs
   end
 
   def self.create_with_permissions!(attrs, perms)
     cs = new(attrs)
-    cs.permissions = perms
+    cs.permissions = perms | CAN_VIEW
     cs.save!
     cs
   end
@@ -75,12 +87,17 @@ class Committership < ActiveRecord::Base
 
   def build_permissions(*perms)
     perms = perms.flatten.compact.map{|p| p.to_sym }
+    perms << :view unless perms.empty?
     self.permissions = permission_mask_for(*perms)
   end
 
   def permitted?(wants_to)
     raise "unknown permission: #{wants_to.inspect}" if !PERMISSION_TABLE[wants_to]
     (self.permissions & PERMISSION_TABLE[wants_to]) != 0
+  end
+
+  def viewer?
+    permitted?(:view)
   end
 
   def reviewer?
@@ -120,9 +137,9 @@ class Committership < ActiveRecord::Base
   end
 
   protected
-    def notify_repository_owners
+    def notify_repository_owners_and_collaborators
       return unless creator
-      recipients = repository.owners
+      recipients = repository.owners + members
       recipients.each do |r|
         message = Message.new({
           :sender => creator,

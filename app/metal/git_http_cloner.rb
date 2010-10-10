@@ -1,5 +1,7 @@
 # encoding: utf-8
 #--
+#   Copyright (C) 2010 Marko Peltola <marko@markopeltola.com>
+#   Copyright (C) 2010 Tero Hänninen <tero.j.hanninen@jyu.fi>
 #   Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies)
 #
 #   This program is free software: you can redistribute it and/or modify
@@ -46,7 +48,7 @@ class GitHttpCloner
         rest = match[2]
         begin
           repo = Repository.find_by_path(path)
-          return NOT_FOUND_RESPONSE unless repo
+          return NOT_FOUND_RESPONSE if repo.private? || !repo
           repo.cloned_from(remote_ip(env), nil, nil, 'http') if rest == '/HEAD'          
           full_path = File.join(repo.full_repository_path, rest)
           headers = {

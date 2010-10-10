@@ -157,12 +157,13 @@ class CommittershipTest < ActiveSupport::TestCase
 
     should "set a permission mask" do
       @cs.build_permissions(:review, :commit)
-      assert_equal Committership::CAN_REVIEW | Committership::CAN_COMMIT, @cs.permissions
+      assert_equal Committership::CAN_VIEW | Committership::CAN_REVIEW | Committership::CAN_COMMIT, @cs.permissions
     end
 
     should "build permissions from either strings or symbols" do
       @cs.build_permissions("review", "commit")
-      assert_equal Committership::CAN_REVIEW | Committership::CAN_COMMIT, @cs.permissions
+      # build_permissions gives view right too when any other right will be given
+      assert_equal Committership::CAN_VIEW | Committership::CAN_REVIEW | Committership::CAN_COMMIT, @cs.permissions
     end
 
     should "not blow up if it receives no permissions" do
@@ -205,19 +206,19 @@ class CommittershipTest < ActiveSupport::TestCase
     end
 
     should "find all reviewers" do
-      @cs.build_permissions(:review)
+      @cs.build_permissions([:view,:review])
       @cs.save!
       assert Committership.reviewers.all.include?(@cs)
     end
 
     should "find all committers" do
-      @cs.build_permissions(:commit)
+      @cs.build_permissions([:view,:commit])
       @cs.save!
       assert Committership.committers.all.include?(@cs)
     end
 
     should "find all admins" do
-      @cs.build_permissions(:admin)
+      @cs.build_permissions([:view,:admin])
       @cs.save!
       assert Committership.admins.all.include?(@cs)
     end
@@ -231,7 +232,7 @@ class CommittershipTest < ActiveSupport::TestCase
 
     should "get a list of current permissions" do
       @cs.build_permissions(:review, :commit)
-      assert_equal [:commit, :review], @cs.permission_list.sort_by(&:to_s)
+      assert_equal [:commit, :review, :view], @cs.permission_list.sort_by(&:to_s)
     end
   end
 

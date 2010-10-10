@@ -81,6 +81,7 @@ ActionController::Routing::Routes.draw do |map|
     :member => {
       :clone => :get, :create_clone => :post,
       :writable_by => :get,
+      :viewable_by => :get,
       :config => :get,
       :confirm_delete => :get,
       :committers => :get,

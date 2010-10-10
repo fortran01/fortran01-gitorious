@@ -1,5 +1,7 @@
 # encoding: utf-8
 #--
+#   Copyright (C) 2010 Marko Peltola <marko@markopeltola.com>
+#   Copyright (C) 2010 Tero Hänninen <tero.j.hanninen@jyu.fi>
 #   Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies)
 #   Copyright (C) 2008 Johan Sørensen <johan@johansorensen.com>
 #   Copyright (C) 2008 Tor Arne Vestbø <tavestbo@trolltech.com>
@@ -30,6 +32,12 @@ class SearchesController < ApplicationController
       })
       @search.run
       @results = @search.results
+      if VisibilityFeatureEnabled
+        @results.delete_if do |result|
+          (result.respond_to?("visibility_collaborators?") && result.visibility_collaborators?) ||
+          (result.respond_to?("visibility_logged_in?")     && result.visibility_logged_in? && !logged_in?)
+        end
+      end
     end
   rescue Ultrasphinx::UsageError
     @results = []

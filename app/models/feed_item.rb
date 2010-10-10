@@ -1,5 +1,7 @@
 # encoding: utf-8
 #--
+#   Copyright (C) 2010 Marko Peltola <marko@markopeltola.com>
+#   Copyright (C) 2010 Tero Hänninen <tero.j.hanninen@jyu.fi>
 #   Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies)
 #
 #   This program is free software: you can redistribute it and/or modify
@@ -21,6 +23,7 @@ class FeedItem < ActiveRecord::Base
   belongs_to :watcher, :class_name => "User"
 
   def self.bulk_create_from_watcher_list_and_event!(watcher_ids, event)
+    return unless event.visibility_all?
     return if watcher_ids.blank?
     # Build a FeedItem for all the watchers interested in the event
     sql_values = watcher_ids.map do |an_id|

@@ -36,6 +36,11 @@ module ApplicationHelper
     GREETINGS[rand(GREETINGS.length)]
   end
 
+  def private_abbr(object)
+    return "" if !object.respond_to?('visibility_publics?') || object.visibility_publics?
+    I18n.t("visibility.private_abbr")
+  end
+
   def help_box(style = :side, icon = :help, options = {}, &block)
     out = %Q{<div id="#{options.delete(:id)}" style="#{options.delete(:style)}"
                   class="help-box #{style} #{icon} round-5">

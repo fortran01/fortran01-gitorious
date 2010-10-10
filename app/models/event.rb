@@ -1,5 +1,7 @@
 # encoding: utf-8
 #--
+#   Copyright (C) 2010 Marko Peltola <marko@markopeltola.com>
+#   Copyright (C) 2010 Tero Hänninen <tero.j.hanninen@jyu.fi>
 #   Copyright (C) 2008 David A. Cuadrado <krawek@gmail.com>
 #   Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies)
 #   Copyright (C) 2008 Johan Sørensen <johan@johansorensen.com>
@@ -20,6 +22,8 @@
 #++
 
 class Event < ActiveRecord::Base
+
+  ALWAYS_PUBLIC_TARGETS = []
 
   MAX_COMMIT_EVENTS = 25
 
@@ -47,30 +51,86 @@ class Event < ActiveRecord::Base
     :include => [:user, :project]
   }
   named_scope :excluding_commits, {:conditions => ["action != ?", Action::COMMIT]}
+  named_scope :excluding_private_repos, {:conditions =>
+        ["target_type != ? or target_id in (?)", 
+         "Repository", Repository.visibility_publics]}
 
-  def self.latest(count)
+  named_scope :visibility_all, {:conditions =>
+                ["  (target_type = :repo
+                    and exists (select id
+                                from repositories 
+                                where id = target_id and id in (:repo_vis_all)))
+                  or
+                    (target_type = :proj
+                    and exists (select id
+                                from projects
+                                where target_id = id and visibility = (:proj_vis_all)))
+                  or
+                    (target_type = :merge_req
+                    and exists (select id
+                                from merge_requests
+                                where id = target_id
+                                and exists (select id
+                                            from repositories
+                                            where id = target_repository_id
+                                            and id in (:repo_vis_all))))",
+                {:repo          => "Repository",
+                 :proj          => "Project",
+                 :merge_req     => "MergeRequest",
+                 :repo_vis_all  => Repository.visibility_all,
+                 :proj_vis_all  => Project::VISIBILITY_ALL}]}
+
+  def always_visible?
+    ALWAYS_PUBLIC_TARGETS.include? target_type
+  end
+
+  def visibility_publics?
+    return target.visibility_publics? if target.respond_to? "visibility_publics?"
+    return always_visible?
+  end
+
+  def visibility_all?
+    return target.visibility_all? if target.respond_to? "visibility_all?"
+    return always_visible?
+  end
+
+  def can_be_viewed_by?(user)
+    return target.can_be_viewed_by?(user) if target.respond_to? "can_be_viewed_by?"
+    return always_visible?
+  end
+
+  def visible?(logged_in)
+    return visibility_publics? if logged_in
+    return visibility_all?
+  end
+
+  def self.latest(logged_in, count)
     Rails.cache.fetch("events:latest_#{count}", :expires_in => 10.minutes) do
       latest_event_ids = Event.find_by_sql(
         ["select id,action,created_at from events " +
          "use index (index_events_on_created_at) where (action != ?) " +
          "order by created_at desc limit ?", Action::COMMIT, count
         ]).map(&:id)
-      Event.find(latest_event_ids, :order => "created_at desc",
+      events = Event.find(latest_event_ids, :order => "created_at desc",
         :include => [:user, :project, :events])
+      events.delete_if { |e| !e.visible?(logged_in) } if VisibilityFeatureEnabled
+      events
     end
   end
 
-  def self.latest_in_projects(count, project_ids)
+  def self.latest_in_projects(logged_in, count, project_ids)
     return [] if project_ids.blank?
     Rails.cache.fetch("events:latest_in_projects_#{project_ids.join("_")}_#{count}",
         :expires_in => 10.minutes) do
-      find(:all, {
+      events = find(:all, {
           :from => "#{quoted_table_name} use index (index_events_on_created_at)",
           :order => "events.created_at desc", :limit => count,
           :include => [:user, :project, :events],
           :conditions => ['events.action != ? and project_id in (?)',
-                          Action::COMMIT, project_ids]
-        })
+                          Action::COMMIT, project_ids] })
+      # not pretty and screws the count, but works
+      events.delete_if { |e| !e.visible?(logged_in) } if VisibilityFeatureEnabled
+      events
     end
   end
 
@@ -205,6 +265,7 @@ class Event < ActiveRecord::Base
   end
 
   def create_feed_items
+    return unless self.visibility_all?
     return if self.action == Action::COMMIT
     FeedItem.bulk_create_from_watcher_list_and_event!(watcher_ids, self)
   end

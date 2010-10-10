@@ -1,5 +1,7 @@
 <%
 #--
+#   Copyright (C) 2010 Marko Peltola <marko@markopeltola.com>
+#   Copyright (C) 2010 Tero Hänninen <tero.j.hanninen@jyu.fi>
 #   Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies)
 #
 #   This program is free software: you can redistribute it and/or modify
@@ -45,17 +47,18 @@
   
   <% pull_box("Team repositories", :class => "pull-box-365") do -%></h4>
     <ul class="with_icons">
-      <% if @group.repositories.mainlines.empty? -%>
+      <% if @repositories.empty? -%>
         <li><em>None</em></li>
-      <% end -%>
-      <% @group.repositories.mainlines.each do |repository| -%>
-      <li class="repository">
-        <%= link_to "#{h(repository.project.title)}/#{h(repository.name)}", 
-              group_project_repository_path(@group, repository.project, repository) -%>
-        <span class="hint">
-          <%= paragraphs_with_more render_markdown(repository.description), repository.id -%>
-        </span>
-      </li>
+      <% else -%>
+        <% @repositories.each do |repository| -%>
+        <li class="repository">
+          <%= link_to "#{h(repository.project.title)}/#{h(repository.name)}", 
+                group_project_repository_path(@group, repository.project, repository) -%>
+          <span class="hint">
+            <%= paragraphs_with_more render_markdown(repository.description), repository.id -%>
+          </span>
+        </li>
+        <% end -%>
       <% end -%>
     </ul>
   <% end -%>
@@ -63,28 +66,30 @@
   <div id="right" class="w-365">
   <% pull_box("Projects", :class => "pull-box-365") do -%>
     <ul class="with_icons">
-      <% if @group.projects.empty? -%>
+      <% if @projects.empty? -%>
         <li><em>None</em></li>
-      <% end -%>
-      <% @group.projects.each do |project| -%>
-        <li class="project"><%= link_to h(project.title), project -%></li>
+      <% else -%>
+        <% @projects.each do |project| -%>
+          <li class="project"><%= link_to h(project.title), project -%></li>
+        <% end -%>
       <% end -%>
     </ul>
   <% end -%>
   
   <% pull_box("Repository clones", :class => "pull-box-365") do -%>
     <ul class="with_icons">
-    <% if @group.repositories.clones.empty? -%>
+    <% if @clones.empty? -%>
       <li><em>None</em></li>
-    <% end -%>
-    <% @group.repositories.clones.each do |repository| -%>
-      <li class="clone">
-        <%= link_to "#{h(repository.project.title)}/#{h(repository.name)}", 
-              group_project_repository_path(@group, repository.project, repository) -%>
-        <div class="hint">
-          <%= paragraphs_with_more render_markdown(repository.description), repository.id -%>
-        </div>
-      </li>
+    <% else -%>
+      <% @clones.each do |repository| -%>
+        <li class="clone">
+          <%= link_to "#{h(repository.project.title)}/#{h(repository.name)}", 
+                group_project_repository_path(@group, repository.project, repository) -%>
+          <div class="hint">
+            <%= paragraphs_with_more render_markdown(repository.description), repository.id -%>
+          </div>
+        </li>
+      <% end -%>
     <% end -%>
     </ul>
   <% end -%>

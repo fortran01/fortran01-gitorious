@@ -1,5 +1,7 @@
 # encoding: utf-8
 #--
+#   Copyright (C) 2010 Marko Peltola <marko@markopeltola.com>
+#   Copyright (C) 2010 Tero Hänninen <tero.j.hanninen@jyu.fi>
 #   Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies)
 #   Copyright (C) 2007, 2008 Johan Sørensen <johan@johansorensen.com>
 #   Copyright (C) 2008 David Chelimsky <dchelimsky@gmail.com>
@@ -92,6 +94,14 @@ class Repository < ActiveRecord::Base
   named_scope :clones,    :conditions => ["kind in (?) and parent_id is not null",
                                           [KIND_TEAM_REPO, KIND_USER_REPO]]
   named_scope :mainlines, :conditions => { :kind => KIND_PROJECT_REPO }
+  
+  named_scope :visibility_all, :conditions => ["private_repo = ?
+      and exists (select id from projects where id = project_id and visibility = ?)", 
+      false, Project::VISIBILITY_ALL]
+
+  named_scope :visibility_publics, :conditions => ["private_repo = ? 
+      and exists (select id from projects where id = project_id and visibility in (?))", 
+      false, Project::VISIBILITY_PUBLICS]
 
   named_scope :regular, :conditions => ["kind in (?)", [KIND_TEAM_REPO, KIND_USER_REPO,
                                                        KIND_PROJECT_REPO]]
@@ -106,10 +116,17 @@ class Repository < ActiveRecord::Base
     I18n.t("activerecord.models.repository")
   end
 
+  def visibility_human_name
+    return I18n.t("visibility.private_by_attribute") if private_by_attribute?
+    return I18n.t("visibility.private_by_project")   if private_by_project?
+    return I18n.t("visibility.logged_in")            if visibility_logged_in?
+    return I18n.t("visibility.all")                  if visibility_all?
+  end
+
   def self.new_by_cloning(other, username=nil)
     suggested_name = username ? "#{username}s-#{other.name}" : nil
     new(:parent => other, :project => other.project, :name => suggested_name,
-      :merge_requests_enabled => other.merge_requests_enabled)
+      :merge_requests_enabled => other.merge_requests_enabled, :private_repo => other.private_repo)
   end
 
   def self.find_by_name_in_project!(name, containing_project = nil)
@@ -222,11 +239,15 @@ class Repository < ActiveRecord::Base
   end
 
   def clone_url
-    "git://#{GitoriousConfig['gitorious_host']}/#{gitdir}"
+    if self.private?
+      push_url
+    else
+      "git://#{GitoriousConfig['gitorious_host']}/#{gitdir}"
+    end
   end
 
   def http_clone_url
-    "http://#{Site::HTTP_CLONING_SUBDOMAIN}.#{GitoriousConfig['gitorious_host']}/#{gitdir}"
+    "http://git.#{GitoriousConfig['gitorious_host']}/#{gitdir}" unless self.private?
   end
 
   def http_cloning?
@@ -320,6 +341,12 @@ class Repository < ActiveRecord::Base
   # Can +a_user+ request a merge from this repository
   def can_request_merge?(a_user)
     !mainline? && writable_by?(a_user)
+  end
+
+  # Can +a_user+ view this repository
+  def can_be_viewed_by?(a_user)
+    return self.viewer?(a_user) if private_by_attribute?
+    return self.project.can_be_viewed_by?(a_user)
   end
 
   # changes the owner to +another_owner+, removes the old owner as committer
@@ -469,6 +496,34 @@ class Repository < ActiveRecord::Base
     kind == KIND_PROJECT_REPO
   end
 
+  def private_by_attribute?
+    private_repo
+  end
+
+  def private_by_project?
+    project.visibility_collaborators?
+  end
+
+  def private?
+    private_by_attribute? || private_by_project?
+  end
+
+  def visibility_all?
+    !private_repo && project.visibility_all?
+  end
+
+  def visibility_publics?
+    !private_repo && project.visibility_publics?
+  end
+
+  def visibility_logged_in?
+    !private_repo && project.visibility_logged_in?
+  end
+
+  def visibility_collaborators?
+    private?
+  end
+
   def mainline?
     project_repo?
   end
@@ -496,6 +551,11 @@ class Repository < ActiveRecord::Base
     committerships.reviewers.map{|c| c.members }.flatten.compact.uniq
   end
 
+  # Returns a list of Users who can see this repo
+  def viewers
+    committerships.viewers.map{|c| c.members }.flatten.compact.uniq
+  end
+
   # The list of users who can admin this repo, either directly as
   # committerships or indirectly as members of a group
   def administrators
@@ -510,8 +570,16 @@ class Repository < ActiveRecord::Base
     a_user.is_a?(User) ? self.reviewers.include?(a_user) : false
   end
 
+  def viewer?(a_user)
+    a_user.is_a?(User) ? self.viewers.include?(a_user) : false
+  end
+
   def admin?(a_user)
     a_user.is_a?(User) ? self.administrators.include?(a_user) : false
+  end
+
+  def collaborator?(a_user)
+    self.admin?(a_user) || self.committer?(a_user) || self.reviewer?(a_user) || self.viewer?(a_user)
   end
 
   # Is this repo writable by +a_user+, eg. does he have push permissions here

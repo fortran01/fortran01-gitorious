@@ -1,5 +1,7 @@
 # encoding: utf-8
 #--
+#   Copyright (C) 2010 Marko Peltola <marko@markopeltola.com>
+#   Copyright (C) 2010 Tero Hänninen <tero.j.hanninen@jyu.fi>
 #   Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies)
 #   Copyright (C) 2008 Johan Sørensen <johan@johansorensen.com>
 #   Copyright (C) 2008 David A. Cuadrado <krawek@gmail.com>
@@ -91,6 +93,18 @@ class MergeRequest < ActiveRecord::Base
     if can_be_reopened_by?(a_user)
       return reopen
     end
+  end
+
+  def visibility_all?
+    return target_repository.visibility_all?
+  end
+
+  def visibility_publics?
+    return target_repository.visibility_publics?
+  end
+
+  def can_be_viewed_by?(user)
+    return target_repository.can_be_viewed_by?(user)
   end
 
   def can_be_reopened_by?(a_user)

@@ -21,7 +21,7 @@
 
 class EventsController < ApplicationController
   def index
-    @events = Event.paginate(:all, :order => "events.created_at desc", 
+    @events = Event.visibility_all.paginate(:all, :order => "events.created_at desc",
                   :page => params[:page], :include => [:user])
     @atom_auto_discovery_url = events_path(:format => :atom)
     

@@ -1,5 +1,7 @@
 # encoding: utf-8
 #--
+#   Copyright (C) 2010 Marko Peltola <marko@markopeltola.com>
+#   Copyright (C) 2010 Tero Hänninen <tero.j.hanninen@jyu.fi>
 #   Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies)
 #   Copyright (C) 2007 Johan Sørensen <johan@johansorensen.com>
 #   Copyright (C) 2008 Tor Arne Vestbø <tavestbo@trolltech.com>
@@ -36,6 +38,14 @@ module ProjectsHelper
     [
       ["Writable by everyone", Repository::WIKI_WRITABLE_EVERYONE],
       ["Writable by project members", Repository::WIKI_WRITABLE_PROJECT_MEMBERS],
+    ]
+  end
+
+  def visibility_choices
+    [
+      [t("visibility.all"), Project::VISIBILITY_ALL],
+      [t("visibility.logged_in"), Project::VISIBILITY_LOGGED_IN],
+      [t("visibility.private_by_project"), Project::VISIBILITY_COLLABORATORS]
     ]
   end
 

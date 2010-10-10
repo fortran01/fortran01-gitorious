@@ -28,7 +28,7 @@
 	  <%= paragraphs_with_more(render_markdown(@project.description, :auto_link), @project.id) -%>
 </div>
 <div class="content-container w-750" id="repositories">
-<% @project.repositories.mainlines.each do |repo| -%>
+<% @repositories.each do |repo| -%>
   <%= render :partial => "repositories/overview", :locals => {:repository => repo} -%>
 <% end -%>
 </div>
@@ -85,6 +85,9 @@
       </li>
 	  <% end -%>
       <li><strong><%= t("views.projects.created") %>:</strong> <%= @project.created_at.to_s(:short) -%></li>
+      <% if VisibilityFeatureEnabled -%>
+        <li><strong><%= t("visibility.caption") %>:</strong> <%= @project.visibility_human_name -%></li>
+      <% end -%>
       <% unless @project.home_url.blank? -%>
       <li><strong><%= t("views.projects.website") %></strong> 
         <%= link_to base_url(@project.home_url), h(@project.home_url) -%></li>
@@ -110,5 +113,14 @@
     <% end -%>
     <%= render :partial => "repositories" -%>
   <% end -%>
-  
+
+  <% if VisibilityFeatureEnabled -%>
+    <h4>Viewers</h4>
+    <ul>
+      <% @viewers.each do |viewer| -%>
+	      <li><%= link_to viewer.title, viewer -%></li>
+      <% end -%>
+    </ul>
+  <% end -%>
+
 <% end -%>

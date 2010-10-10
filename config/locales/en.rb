@@ -406,6 +406,7 @@
         :edit_breadcrumb => "Edit Repository",
         :committers => "Committers",
         :current_committers => "Committers",
+        :collaborators => "Collaborators",
         :remove => "Remove",
         :clone_breadcrumb => "Clone Repository",
         :create_title => lambda { |this, clone, project|
@@ -619,6 +620,16 @@
       :am => 'AM',
       :pm => 'PM',
     },
+    :visibility => {
+      :caption => "Visibility",
+      :private_by_attribute => "Visible to repository collaborators",
+      :private_by_project => "Visible to project collaborators",
+      :logged_in => "Visible to logged in users",
+      :all => "Visible to everyone",
+      :private_abbr => "pri",
+      :logged_in_abbr => "site",
+      :all_abbr => "all",
+    },
     :activerecord => {
       :models => {
         :comment => "Comment",
@@ -664,6 +675,7 @@
           :mailinglist_url => "Mailinglist URL (if any)",
           :bugtracker_url => "Bugtracker URL (if any)",
           :wiki_enabled => "Should the wiki be enabled?",
+          :visibility => "Project visibility",
           :tag_list => "Labels (space separated)",
           :merge_request_states => 'Merge request states',
         },

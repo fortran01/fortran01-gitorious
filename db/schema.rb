@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20100316124803) do
+ActiveRecord::Schema.define(:version => 20100614091850) do
 
   create_table "archived_events", :force => true do |t|
     t.integer  "user_id"
@@ -278,6 +278,7 @@ ActiveRecord::Schema.define(:version => 20100316124803) do
     t.string   "oauth_signoff_site"
     t.string   "oauth_path_prefix"
     t.text     "merge_request_custom_states"
+    t.integer  "visibility",                  :default => 1
   end
 
   add_index "projects", ["owner_type", "owner_id"], :name => "index_projects_on_owner_type_and_owner_id"
@@ -307,6 +308,7 @@ ActiveRecord::Schema.define(:version => 20100316124803) do
     t.boolean  "merge_requests_enabled",                 :default => true
     t.integer  "disk_usage"
     t.integer  "push_count_since_gc"
+    t.boolean  "private_repo",                           :default => false
   end
 
   add_index "repositories", ["hashed_path"], :name => "index_repositories_on_hashed_path", :unique => true

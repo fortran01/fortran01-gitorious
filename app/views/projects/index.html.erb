@@ -53,4 +53,13 @@
       <% end -%>
     </ul>
   <% end -%>
+  <% if logged_in? -%>
+    <% pull_box("Projects you're involved with", :class => "pull-box-sidebar") do -%>
+      <ul class="with_icons">
+        <% @user_projects.each do |project| -%>
+          <li class="project"><%= link_to h(project.title), project -%> <span class="hint"><%= private_abbr(project) %></span></li>
+        <% end -%>
+      </ul>
+    <% end -%>
+  <% end -%>
 <% end -%>
