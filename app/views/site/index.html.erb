@@ -82,19 +82,6 @@
   <% end -%>
 <% end -%>
 
-<% cache([:site_index, :active_users], :expires_in => 20.minutes) do -%>
-  <% pull_box("Active users", :class => "pull-box-510") do -%>
-    <ul class="with_icons inline_icons">
-      <% @active_users.each do |user| -%>
-        <li class="user">
-          <%= avatar(user, { :size => 16 }) -%>
-          <%= link_to h(user.title), user -%>
-        </li>
-      <% end -%>
-    </ul>
-  <% end -%>
-<% end -%>
-
 <% cache([:site_index, :active_teams], :expires_in => 15.minutes) do -%>
   <% pull_box("Active teams", :class => "pull-box-510") do -%>
     <ul class="with_icons inline_icons">
